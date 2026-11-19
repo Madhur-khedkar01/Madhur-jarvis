@@ -1,0 +1,5799 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>J.A.R.V.I.S. // ChatBot</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js"></script>
+
+    <style>
+      :root {
+        --bg: #10151d;
+        --sidebar: #151c26;
+        --panel: #1b2430;
+        --panel2: #253243;
+        --border: #303d4d;
+        --text: #e9eef5;
+        --muted: #9aa9ba;
+        --accent: #7ca9df;
+        --accent-soft: #273b55;
+        --danger: #d96c78;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: Inter, Arial, sans-serif;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+        color: inherit;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .app {
+        height: 100vh;
+        display: flex;
+      }
+
+      .sidebar {
+        width: 270px;
+        flex-shrink: 0;
+        background: var(--sidebar);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        padding: 20px 14px;
+        z-index: 10;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 5px 8px 25px;
+      }
+
+      .brand-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #304e72;
+        display: grid;
+        place-items: center;
+        color: #d6e8ff;
+        font-size: 19px;
+      }
+
+      .brand-name {
+        font-weight: 800;
+        font-size: 20px;
+        letter-spacing: 2px;
+      }
+
+      .brand-sub {
+        color: var(--muted);
+        font-size: 9px;
+        letter-spacing: 2px;
+        margin-top: 4px;
+      }
+
+      .new-chat {
+        width: 100%;
+        padding: 13px;
+        background: var(--accent-soft);
+        border: 1px solid #405875;
+        border-radius: 10px;
+        text-align: left;
+        font-size: 12px;
+        font-weight: 600;
+        transition: 0.2s;
+      }
+
+      .new-chat:hover {
+        background: #344e6c;
+      }
+      .new-chat i {
+        margin-right: 10px;
+        color: var(--accent);
+      }
+
+      .history-heading {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        margin: 25px 8px 12px;
+      }
+
+      .history {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        padding-right: 3px;
+      }
+
+      .history-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px;
+        margin-bottom: 4px;
+        border-radius: 9px;
+        border: 1px solid transparent;
+      }
+
+      .history-item:hover,
+      .history-item.active {
+        background: var(--panel2);
+        border-color: var(--border);
+      }
+
+      .history-open {
+        flex: 1;
+        min-width: 0;
+        border: 0;
+        background: transparent;
+        text-align: left;
+        color: var(--muted);
+        font-size: 11px;
+        padding: 8px 6px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .history-item.active .history-open,
+      .history-open:hover {
+        color: var(--text);
+      }
+
+      .history-delete {
+        flex-shrink: 0;
+        width: 29px;
+        height: 29px;
+        border: 0;
+        border-radius: 7px;
+        background: transparent;
+        color: #8795a5;
+        font-size: 17px;
+        opacity: 0;
+        transition: 0.15s;
+      }
+
+      .history-item:hover .history-delete,
+      .history-item.active .history-delete {
+        opacity: 1;
+      }
+
+      .history-delete:hover {
+        background: #4b2930;
+        color: #ff9da6;
+      }
+
+      .history-empty {
+        color: var(--muted);
+        font-size: 11px;
+        padding: 12px 8px;
+      }
+
+      .sidebar-bottom {
+        border-top: 1px solid var(--border);
+        padding-top: 12px;
+        margin-top: 12px;
+      }
+
+      .side-btn {
+        width: 100%;
+        padding: 11px;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        text-align: left;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .side-btn:hover {
+        background: var(--panel2);
+        color: var(--text);
+      }
+
+      .side-btn i {
+        width: 23px;
+        color: var(--accent);
+      }
+
+      .main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .topbar {
+        height: 65px;
+        flex-shrink: 0;
+        background: var(--sidebar);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        gap: 12px;
+      }
+
+      .top-left,
+      .top-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .page-title {
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      .model-select {
+        max-width: 250px;
+        min-width: 140px;
+        background: var(--panel);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 9px;
+        font-size: 10px;
+        outline: none;
+      }
+
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        background: var(--panel);
+        color: var(--muted);
+      }
+
+      .icon-btn:hover {
+        background: var(--panel2);
+        color: white;
+      }
+
+      .status {
+        color: #75c9a0;
+        font-size: 10px;
+        white-space: nowrap;
+      }
+
+      .dot {
+        display: inline-block;
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #75c9a0;
+        margin-right: 6px;
+      }
+
+      .mobile-menu {
+        display: none;
+      }
+
+      .workspace {
+        flex: 1;
+        min-height: 0;
+        position: relative;
+      }
+
+      .chat-page {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chat-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 25px 18px 170px;
+      }
+
+      .chat-content {
+        max-width: 850px;
+        margin: auto;
+      }
+
+      .welcome {
+        min-height: 55vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+      }
+
+      .core {
+        width: 95px;
+        height: 95px;
+        border-radius: 50%;
+        background: #263d58;
+        border: 1px solid #54769b;
+        display: grid;
+        place-items: center;
+        font-size: 35px;
+        color: #c7e2ff;
+        margin-bottom: 25px;
+        box-shadow: 0 0 0 12px #263d5820;
+      }
+
+      .welcome h1 {
+        font-size: clamp(25px, 4vw, 38px);
+        letter-spacing: -1px;
+      }
+
+      .welcome h1 span {
+        color: var(--accent);
+      }
+
+      .welcome p {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.8;
+        margin-top: 12px;
+      }
+
+      .suggestions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        width: 100%;
+        max-width: 590px;
+        margin-top: 30px;
+      }
+
+      .suggestion {
+        padding: 15px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        text-align: left;
+        color: #cbd7e5;
+        font-size: 11px;
+      }
+
+      .suggestion:hover {
+        background: var(--panel2);
+        border-color: var(--accent);
+      }
+
+      .suggestion i {
+        color: var(--accent);
+        margin-right: 8px;
+      }
+
+      .message {
+        display: flex;
+        gap: 12px;
+        margin: 25px 0;
+      }
+
+      .avatar {
+        width: 34px;
+        height: 34px;
+        flex-shrink: 0;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: #29415d;
+        color: #c6e1ff;
+      }
+
+      .message.user .avatar {
+        background: #39334e;
+        color: #d4c7ff;
+      }
+
+      .message-body {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .message-name {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--muted);
+        margin: 3px 0 8px;
+      }
+
+      .message-text {
+        font-size: 13px;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+
+      .message-text pre {
+        overflow: auto;
+        background: #0c1118;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 14px;
+        margin: 12px 0;
+        font-size: 11px;
+      }
+
+      .message-text code {
+        background: var(--panel2);
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+
+      .message-actions {
+        display: flex;
+        gap: 14px;
+        margin-top: 10px;
+      }
+
+      .message-actions button {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .message-actions button:hover {
+        color: white;
+      }
+
+      .composer-area {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 18px;
+        background: var(--bg);
+        border-top: 1px solid var(--border);
+      }
+
+      .composer-wrap {
+        max-width: 850px;
+        margin: auto;
+      }
+
+      .file-preview {
+        display: none;
+        padding: 10px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .composer {
+        background: var(--panel);
+        border: 1px solid #435267;
+        border-radius: 14px;
+        padding: 11px 12px 8px;
+      }
+
+      .composer:focus-within {
+        border-color: var(--accent);
+      }
+
+      #prompt {
+        width: 100%;
+        min-height: 42px;
+        max-height: 170px;
+        resize: none;
+        background: transparent;
+        color: var(--text);
+        border: 0;
+        outline: 0;
+        font-size: 12px;
+        line-height: 1.7;
+        padding: 4px;
+      }
+
+      #prompt::placeholder {
+        color: #8190a2;
+      }
+
+      .composer-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .tool-row {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+      .tool-btn {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 9px;
+        border-radius: 7px;
+      }
+
+      .tool-btn:hover,
+      .tool-btn.active {
+        background: var(--panel2);
+        color: #8fd2ff;
+      }
+
+      .send-btn {
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 9px;
+        background: #496b91;
+        color: white;
+      }
+
+      .send-btn:hover {
+        background: #5c83ad;
+      }
+
+      .hint {
+        text-align: center;
+        font-size: 9px;
+        color: var(--muted);
+        margin-top: 9px;
+      }
+
+      .modal-bg {
+        position: fixed;
+        inset: 0;
+        background: #000a;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 15px;
+        z-index: 30;
+      }
+
+      .modal-bg.show {
+        display: flex;
+      }
+
+      .modal {
+        width: 100%;
+        max-width: 510px;
+        max-height: 88vh;
+        overflow: auto;
+        background: var(--sidebar);
+        border: 1px solid var(--border);
+        border-radius: 15px;
+        padding: 22px;
+      }
+
+      .modal-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 18px;
+      }
+
+      .modal-head h2 {
+        font-size: 16px;
+      }
+
+      .close-btn {
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        font-size: 23px;
+      }
+
+      .field {
+        margin: 15px 0;
+      }
+
+      .field label {
+        display: block;
+        font-size: 10px;
+        color: var(--muted);
+        margin-bottom: 7px;
+      }
+
+      .field input,
+      .field select {
+        width: 100%;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 11px;
+        outline: 0;
+        font-size: 11px;
+      }
+
+      .field input:focus,
+      .field select:focus {
+        border-color: var(--accent);
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 13px;
+        font-size: 11px;
+        background: var(--accent-soft);
+        color: #e5efff;
+      }
+
+      .secondary-btn {
+        background: var(--panel);
+        color: var(--text);
+      }
+
+      .button-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+
+      .small-note {
+        font-size: 10px;
+        color: var(--muted);
+        line-height: 1.7;
+        margin-top: 8px;
+      }
+
+      #toast {
+        position: fixed;
+        bottom: 22px;
+        left: 50%;
+        transform: translate(-50%, 15px);
+        background: var(--panel2);
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 11px 15px;
+        font-size: 11px;
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.2s;
+        z-index: 60;
+        max-width: 90%;
+        text-align: center;
+      }
+
+      #toast.show {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      /* J.A.R.V.I.S. CORE ANIMATION */
+      .core {
+        position: relative;
+        isolation: isolate;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        margin-bottom: 25px;
+        background: radial-gradient(
+          circle at 50% 50%,
+          #e9f7ff 0 3%,
+          #75caff 4% 8%,
+          #245e91 10% 20%,
+          #0d1e35 36%,
+          #09111d 62%,
+          #162f4d 70%,
+          #6bbdff 72%,
+          #13253b 75%
+        );
+        border: 1px solid #79caff;
+        box-shadow:
+          0 0 18px #4ebaff99,
+          0 0 48px #2789db55,
+          inset 0 0 28px #64baff88;
+        animation: corePulse 3s ease-in-out infinite;
+      }
+      .core:before,
+      .core:after {
+        content: "";
+        position: absolute;
+        inset: -12px;
+        border-radius: 50%;
+        border: 1px solid #70c7ff99;
+        box-shadow: 0 0 14px #3daeff55;
+        animation: coreOrbit 9s linear infinite;
+      }
+      .core:after {
+        inset: -23px;
+        border-style: dashed;
+        border-color: #4a9edb88;
+        animation-duration: 16s;
+        animation-direction: reverse;
+      }
+      .core i {
+        position: relative;
+        z-index: 2;
+        font-size: 38px;
+        color: #e7f7ff;
+        text-shadow: 0 0 15px #8ad7ff;
+      }
+      .core.thinking {
+        animation: coreThink 0.75s ease-in-out infinite alternate;
+      }
+      .core.listening {
+        box-shadow:
+          0 0 24px #59d6ff,
+          0 0 70px #2489dd;
+      }
+      .core.speaking {
+        animation: coreSpeak 0.35s ease-in-out infinite alternate;
+      }
+      @keyframes corePulse {
+        50% {
+          filter: brightness(1.25);
+          transform: scale(1.025);
+        }
+      }
+      @keyframes coreOrbit {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes coreThink {
+        to {
+          filter: brightness(1.7);
+          transform: scale(1.06) rotate(8deg);
+        }
+      }
+      @keyframes coreSpeak {
+        to {
+          transform: scale(1.06);
+          filter: brightness(1.5);
+        }
+      }
+
+      .utility-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 28;
+        background: #0b111b;
+        display: none;
+        flex-direction: column;
+        overflow: auto;
+      }
+      .utility-modal.show {
+        display: flex;
+      }
+      .utility-head {
+        height: 62px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        border-bottom: 1px solid var(--border);
+        background: var(--sidebar);
+      }
+      .utility-head strong {
+        letter-spacing: 1px;
+        font-size: 13px;
+      }
+      .utility-body {
+        padding: 18px;
+        max-width: 1500px;
+        width: 100%;
+        margin: 0 auto;
+        flex: 1;
+        min-height: 0;
+      }
+      .utility-panel {
+        background: var(--sidebar);
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        padding: 16px;
+        min-width: 0;
+      }
+      .panel-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 12px;
+      }
+      .code-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 16px;
+      }
+      .utility-input {
+        width: 100%;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 11px;
+        font: inherit;
+        font-size: 12px;
+        outline: 0;
+      }
+      .code-editor {
+        width: 100%;
+        height: min(62vh, 650px);
+        margin-top: 10px;
+        resize: vertical;
+        background: #080d14;
+        color: #d9eaff;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 14px;
+        font:
+          12px/1.6 Consolas,
+          monospace;
+        tab-size: 2;
+        outline: none;
+      }
+      .utility-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+      }
+      .preview-panel {
+        display: flex;
+        flex-direction: column;
+        min-height: 420px;
+      }
+      .preview-frame {
+        width: 100%;
+        flex: 1;
+        min-height: 420px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: white;
+      }
+      .control-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+        gap: 10px;
+      }
+      .control-tile {
+        min-height: 90px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        font-size: 11px;
+      }
+      .control-tile i {
+        font-size: 20px;
+        color: var(--accent);
+      }
+      .control-tile:hover {
+        border-color: var(--accent);
+        background: var(--panel2);
+      }
+      .command-row {
+        display: flex;
+        gap: 8px;
+      }
+      .command-row input {
+        flex: 1;
+        min-width: 0;
+      }
+      .memory-editor {
+        width: 100%;
+        min-height: 260px;
+        resize: vertical;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        font:
+          12px/1.6 Inter,
+          Arial,
+          sans-serif;
+        margin-top: 12px;
+      }
+
+      /* J.A.R.V.I.S. WORKSPACE */
+      .mark77-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 29;
+        background: #0b111b;
+        display: none;
+        flex-direction: column;
+        overflow: auto;
+      }
+      .mark77-modal.show {
+        display: flex;
+      }
+      .m77-head {
+        height: 62px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 22px;
+        background: var(--sidebar);
+        border-bottom: 1px solid var(--border);
+      }
+      .m77-head strong {
+        font-size: 13px;
+        letter-spacing: 1px;
+      }
+      .m77-wrap {
+        width: 100%;
+        max-width: 1500px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .m77-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+      }
+      .m77-card {
+        background: var(--sidebar);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 15px;
+        min-height: 108px;
+        text-align: left;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .m77-card:hover {
+        border-color: var(--accent);
+        background: var(--panel);
+      }
+      .m77-card i {
+        color: var(--accent);
+        font-size: 19px;
+        margin-top: 2px;
+        width: 22px;
+      }
+      .m77-card b {
+        display: block;
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+      .m77-card small {
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.6;
+      }
+      .m77-section {
+        display: none;
+        background: var(--sidebar);
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        padding: 17px;
+        margin-top: 16px;
+      }
+      .m77-section.active {
+        display: block;
+      }
+      .m77-section h3 {
+        font-size: 14px;
+        margin-bottom: 10px;
+      }
+      .m77-section p {
+        font-size: 10px;
+        color: var(--muted);
+        line-height: 1.7;
+        margin: 7px 0 12px;
+      }
+      .m77-input,
+      .m77-area,
+      .m77-select {
+        width: 100%;
+        background: var(--bg);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 11px;
+        font:
+          12px Inter,
+          Arial;
+        margin: 6px 0;
+        outline: 0;
+      }
+      .m77-area {
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.6;
+      }
+      .m77-output {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: #0b1119;
+        border: 1px solid var(--border);
+        border-radius: 9px;
+        padding: 13px;
+        margin-top: 12px;
+        min-height: 65px;
+        max-height: 50vh;
+        overflow: auto;
+        font:
+          11px/1.7 Consolas,
+          monospace;
+        color: #dce9f8;
+      }
+      .m77-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .m77-row > * {
+        flex: 1;
+        min-width: 130px;
+      }
+      .m77-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .m77-item {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 11px;
+      }
+      .m77-item span {
+        flex: 1;
+        min-width: 0;
+      }
+      .m77-item button {
+        border: 0;
+        background: transparent;
+        color: #e89aa2;
+        padding: 4px;
+      }
+      .m77-pill {
+        display: inline-block;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 5px 9px;
+        color: var(--muted);
+        font-size: 9px;
+        margin: 2px;
+      }
+      .m77-progress {
+        height: 6px;
+        background: #263343;
+        border-radius: 8px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+      .m77-progress span {
+        display: block;
+        height: 100%;
+        background: var(--accent);
+        width: 0;
+        transition: width 0.2s;
+      }
+      .m77-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+        margin-top: 10px;
+      }
+      .m77-table th,
+      .m77-table td {
+        border: 1px solid var(--border);
+        padding: 7px;
+        text-align: left;
+      }
+      .m77-table th {
+        background: var(--panel2);
+      }
+      @media (max-width: 700px) {
+        .m77-wrap {
+          padding: 12px;
+        }
+        .m77-head {
+          padding: 0 12px;
+        }
+        .m77-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+        .m77-card {
+          min-height: 100px;
+          padding: 11px;
+        }
+        .m77-card small {
+          font-size: 9px;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .code-layout {
+          grid-template-columns: 1fr;
+        }
+        .code-editor {
+          height: 45vh;
+        }
+        .preview-frame {
+          min-height: 350px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+      @media (max-width: 900px) {
+        .studio-layout {
+          grid-template-columns: 1fr;
+        }
+        .studio-panel {
+          max-height: none;
+        }
+        .studio-canvas-wrap {
+          min-height: 450px;
+        }
+      }
+      @media (max-width: 760px) {
+        .core {
+          width: 125px;
+          height: 125px;
+        }
+        .studio-top {
+          padding: 0 12px;
+        }
+        .studio-layout {
+          padding: 10px;
+        }
+        .slide-preview {
+          min-width: 500px;
+        }
+        .studio-canvas-wrap {
+          overflow-x: auto;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .sidebar {
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: -285px;
+          transition: 0.2s;
+          box-shadow: 15px 0 40px #0008;
+        }
+
+        .sidebar.open {
+          left: 0;
+        }
+        .mobile-menu {
+          display: inline-block;
+        }
+        .topbar {
+          padding: 0 11px;
+        }
+        .page-title {
+          display: none;
+        }
+        .model-select {
+          max-width: 150px;
+          min-width: 100px;
+        }
+        .chat-area {
+          padding: 17px 12px 155px;
+        }
+        .composer-area {
+          padding: 11px;
+        }
+        .suggestions {
+          grid-template-columns: 1fr;
+        }
+        .status {
+          display: none;
+        }
+        .history-delete {
+          opacity: 1;
+        }
+      }
+
+      /* MARK 88 — BROWSER-NATIVE J.A.R.V.I.S. COMMAND DECK */
+      .j88-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 45;
+        background: #050b14f2;
+        display: none;
+        overflow: auto;
+        padding: 22px;
+      }
+      .j88-overlay.show {
+        display: block;
+      }
+      .j88-shell {
+        max-width: 1180px;
+        margin: 0 auto;
+        background: #101b29;
+        border: 1px solid #31516e;
+        border-radius: 18px;
+        box-shadow: 0 25px 90px #000b;
+        overflow: hidden;
+      }
+      .j88-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 22px;
+        border-bottom: 1px solid #29445f;
+        background: linear-gradient(110deg, #10263b, #101b29);
+      }
+      .j88-head h2 {
+        font-size: 15px;
+        letter-spacing: 2px;
+      }
+      .j88-head small {
+        display: block;
+        color: #8ea9c4;
+        font-size: 10px;
+        letter-spacing: 1px;
+        margin-top: 5px;
+      }
+      .j88-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        padding: 16px;
+      }
+      .j88-card {
+        background: #142235;
+        border: 1px solid #2b4661;
+        border-radius: 12px;
+        padding: 15px;
+        min-width: 0;
+      }
+      .j88-card h3 {
+        font-size: 12px;
+        margin-bottom: 9px;
+        color: #bfe6ff;
+        letter-spacing: 0.7px;
+      }
+      .j88-card p,
+      .j88-muted {
+        font-size: 10px;
+        color: #91a8bf;
+        line-height: 1.7;
+      }
+      .j88-input,
+      .j88-card textarea,
+      .j88-card select {
+        width: 100%;
+        background: #091321;
+        color: #e8f5ff;
+        border: 1px solid #304c68;
+        border-radius: 8px;
+        padding: 10px;
+        font:
+          11px Inter,
+          Arial;
+        margin: 7px 0;
+        outline: none;
+      }
+      .j88-card textarea {
+        min-height: 75px;
+        resize: vertical;
+      }
+      .j88-actions {
+        display: flex;
+        gap: 7px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+      .j88-btn {
+        border: 1px solid #3c6385;
+        background: #1c3a57;
+        color: #e8f5ff;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 10px;
+      }
+      .j88-btn.alt {
+        background: #17283b;
+        border-color: #30465d;
+      }
+      .j88-output {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: #091321;
+        border: 1px solid #263f58;
+        border-radius: 8px;
+        padding: 10px;
+        min-height: 42px;
+        max-height: 230px;
+        overflow: auto;
+        font-size: 10px;
+        line-height: 1.7;
+        color: #c9e3fa;
+        margin-top: 9px;
+      }
+      .j88-camera {
+        width: 100%;
+        aspect-ratio: 16/9;
+        object-fit: contain;
+        background: #03070d;
+        border: 1px solid #2e506e;
+        border-radius: 9px;
+        margin-top: 8px;
+      }
+      .j88-stat {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 7px 0;
+        border-bottom: 1px solid #263b50;
+        font-size: 10px;
+      }
+      .j88-stat b {
+        color: #bfe6ff;
+      }
+      .j88-task {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 8px;
+        border-bottom: 1px solid #263b50;
+        font-size: 10px;
+      }
+      .j88-task span {
+        flex: 1;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .j88-task.done span {
+        text-decoration: line-through;
+        color: #71879c;
+      }
+
+      .j100-model-tools {
+        display: grid;
+        grid-template-columns: 1fr 170px;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .j100-model-tools input,
+      .j100-model-tools select {
+        width: 100%;
+        background: #091321;
+        color: #e8f5ff;
+        border: 1px solid #304c68;
+        border-radius: 8px;
+        padding: 10px;
+        font:
+          11px Inter,
+          Arial;
+        min-width: 0;
+      }
+      .j100-model-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 10px 0;
+        color: #91a8bf;
+        font-size: 10px;
+      }
+      .j100-model-list {
+        max-height: 360px;
+        overflow: auto;
+        display: grid;
+        gap: 7px;
+        margin-top: 10px;
+      }
+      .j100-model-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: #0b1726;
+        border: 1px solid #263e57;
+        border-radius: 9px;
+        padding: 9px;
+      }
+      .j100-model-item strong {
+        font-size: 10px;
+        display: block;
+        color: #e8f5ff;
+        overflow-wrap: anywhere;
+      }
+      .j100-model-item small {
+        font-size: 9px;
+        color: #91a8bf;
+        display: block;
+        margin-top: 4px;
+      }
+      .j100-model-item button {
+        border: 1px solid #35668c;
+        background: #102b43;
+        color: #bfe6ff;
+        border-radius: 7px;
+        padding: 7px 9px;
+        font-size: 10px;
+        white-space: nowrap;
+      }
+      .j100-model-item button:hover {
+        background: #194568;
+      }
+      .j100-pill {
+        display: inline-block;
+        border: 1px solid #31516d;
+        border-radius: 20px;
+        padding: 3px 7px;
+        font-size: 9px;
+        color: #bfe6ff;
+      }
+      .j100-performance {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .j100-performance div {
+        background: #0b1726;
+        border: 1px solid #263e57;
+        border-radius: 8px;
+        padding: 10px;
+      }
+      .j100-performance b {
+        display: block;
+        font-size: 16px;
+        color: #bfe6ff;
+      }
+      .j100-performance span {
+        font-size: 9px;
+        color: #91a8bf;
+      }
+      @media (max-width: 520px) {
+        .j100-model-tools {
+          grid-template-columns: 1fr;
+        }
+        .j100-performance {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .j88-overlay {
+          padding: 7px;
+        }
+        .j88-grid {
+          grid-template-columns: 1fr;
+          padding: 9px;
+        }
+        .j88-head {
+          padding: 14px;
+        }
+        .j88-head h2 {
+          font-size: 12px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="app">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-icon">
+            <i class="fa-solid fa-atom"></i>
+          </div>
+          <div>
+            <div class="brand-name">J.A.R.V.I.S.</div>
+            <div class="brand-sub">J.A.R.V.I.S. • AI SYSTEM</div>
+          </div>
+        </div>
+
+        <button class="new-chat" onclick="newChat()">
+          <i class="fa-solid fa-plus"></i>
+          New Chat
+        </button>
+
+        <div class="history-heading">CHAT HISTORY</div>
+        <div class="history" id="history"></div>
+
+        <div class="sidebar-bottom">
+          <button class="side-btn" onclick="openCommandDeck()">
+            <i class="fa-solid fa-satellite-dish"></i> J.A.R.V.I.S. Command Deck
+          </button>
+          <button class="side-btn" onclick="openSettings()">
+            <i class="fa-solid fa-gear"></i> Settings
+          </button>
+
+          <button class="side-btn" onclick="openControlCenter()">
+            <i class="fa-solid fa-sliders"></i> PC Control Center
+          </button>
+          <button class="side-btn" onclick="openCodeStudio()">
+            <i class="fa-solid fa-code"></i> Coding Studio
+          </button>
+          <button class="side-btn" onclick="openMemory()">
+            <i class="fa-solid fa-brain"></i> Smart Memory
+          </button>
+          <button class="side-btn" onclick="researchSearch()">
+            <i class="fa-solid fa-magnifying-glass"></i> Research Search
+          </button>
+          <button class="side-btn" onclick="openMark77()">
+            <i class="fa-solid fa-layer-group"></i> J.A.R.V.I.S. Workspace
+          </button>
+          <button class="side-btn" onclick="showCreator()">
+            <i class="fa-solid fa-circle-info"></i> About J.A.R.V.I.S.
+          </button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="top-left">
+            <button class="icon-btn mobile-menu" onclick="toggleSidebar()">
+              <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div class="page-title">AI Chat</div>
+
+            <select
+              class="model-select"
+              id="modelSelect"
+              onchange="changeModel(this.value)"
+            >
+              <option value="openai/gpt-4o-mini">GPT-4o Mini</option>
+              <option value="google/gemini-2.5-flash">Gemini 2.5 Flash</option>
+              <option value="deepseek/deepseek-chat">DeepSeek Chat</option>
+            </select>
+
+            <button
+              class="icon-btn"
+              title="Compare two AI models"
+              onclick="compareModels()"
+            >
+              <i class="fa-solid fa-code-compare"></i>
+            </button>
+            <button
+              class="icon-btn"
+              title="Refresh models"
+              onclick="loadModels()"
+            >
+              <i class="fa-solid fa-rotate"></i>
+            </button>
+          </div>
+
+          <div class="top-right">
+            <span class="status">
+              <span class="dot"></span>
+              <span id="statusText">Ready</span>
+            </span>
+
+            <button
+              class="icon-btn"
+              onclick="openCommandDeck()"
+              title="Command Deck"
+            >
+              <i class="fa-solid fa-satellite-dish"></i>
+            </button>
+            <button class="icon-btn" onclick="openSettings()" title="Settings">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+          </div>
+        </header>
+
+        <div class="workspace">
+          <section class="chat-page" id="page-chat">
+            <div class="chat-area" id="chatArea">
+              <div class="chat-content" id="chatContent">
+                <div class="welcome" id="welcome">
+                  <div class="core">
+                    <i class="fa-solid fa-atom"></i>
+                  </div>
+
+                  <h1>Welcome to <span>J.A.R.V.I.S.</span></h1>
+
+                  <p>
+                    Your personal AI workspace.<br />
+                    Think, learn, research and build.
+                  </p>
+
+                  <div class="suggestions">
+                    <button
+                      class="suggestion"
+                      onclick="
+                        useSuggestion(
+                          'Explain a difficult topic in simple words.',
+                        )
+                      "
+                    >
+                      <i class="fa-solid fa-graduation-cap"></i>
+                      Study something
+                    </button>
+
+                    <button
+                      class="suggestion"
+                      onclick="
+                        useSuggestion('Help me build a useful Python project.')
+                      "
+                    >
+                      <i class="fa-solid fa-code"></i>
+                      Build a project
+                    </button>
+
+                    <button
+                      class="suggestion"
+                      onclick="
+                        useSuggestion(
+                          'Give me a detailed research report about renewable energy.',
+                        )
+                      "
+                    >
+                      <i class="fa-solid fa-magnifying-glass"></i>
+                      Research a topic
+                    </button>
+
+                    <button
+                      class="suggestion"
+                      onclick="
+                        useSuggestion('Give me five creative technology ideas.')
+                      "
+                    >
+                      <i class="fa-solid fa-lightbulb"></i>
+                      Explore ideas
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="composer-area">
+              <div class="composer-wrap">
+                <div class="file-preview" id="filePreview"></div>
+
+                <div class="composer">
+                  <textarea
+                    id="prompt"
+                    placeholder="Ask J.A.R.V.I.S. anything..."
+                    rows="1"
+                    oninput="resizeInput(this)"
+                    onkeydown="handleEnter(event)"
+                  ></textarea>
+
+                  <div class="composer-bottom">
+                    <div class="tool-row">
+                      <button
+                        class="tool-btn"
+                        onclick="document.getElementById('fileInput').click()"
+                        title="Attach file"
+                      >
+                        <i class="fa-solid fa-paperclip"></i>
+                      </button>
+
+                      <input
+                        type="file"
+                        id="fileInput"
+                        hidden
+                        accept=".txt,.md,.html,.css,.js,.json,.py,.csv,.xml,.log,.pdf,.docx"
+                      />
+
+                      <button
+                        class="tool-btn"
+                        onclick="startVoice()"
+                        title="Voice input"
+                      >
+                        <i class="fa-solid fa-microphone"></i>
+                      </button>
+
+                      <button
+                        class="tool-btn"
+                        onclick="stopVoice()"
+                        title="Stop speaking"
+                      >
+                        <i class="fa-solid fa-volume-xmark"></i>
+                      </button>
+                      <button
+                        class="tool-btn"
+                        id="wakeBtn"
+                        onclick="toggleWakeWord()"
+                        title="Toggle Hey J.A.R.V.I.S. hands-free mode"
+                      >
+                        <i class="fa-solid fa-headset"></i>
+                      </button>
+
+                      <select
+                        id="modeSelect"
+                        class="model-select"
+                        style="max-width: 125px; min-width: 105px; padding: 7px"
+                        title="AI mode"
+                      >
+                        <option value="general">General</option>
+                        <option value="study">Study</option>
+                        <option value="coding">Coding</option>
+                        <option value="research">Research</option>
+                        <option value="creative">Creative</option>
+                        <option value="quick">Quick</option>
+                      </select>
+                    </div>
+
+                    <button
+                      class="send-btn"
+                      id="sendBtn"
+                      onclick="sendMessage()"
+                    >
+                      <i class="fa-solid fa-arrow-up"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="hint">
+                  AI responses can contain mistakes. Verify important
+                  information.
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- SETTINGS -->
+
+    <div
+      class="modal-bg"
+      id="settingsModal"
+      onclick="if (event.target === this) closeSettings();"
+    >
+      <div class="modal">
+        <div class="modal-head">
+          <h2>J.A.R.V.I.S. Settings</h2>
+          <button class="close-btn" onclick="closeSettings()">×</button>
+        </div>
+
+        <div class="field">
+          <label>OpenRouter API key</label>
+          <input
+            type="password"
+            id="apiKey"
+            placeholder="Paste your new OpenRouter key"
+            autocomplete="new-password"
+            autocapitalize="off"
+            spellcheck="false"
+          />
+          <p class="small-note">
+            Your key is kept in page memory only. It is not saved to
+            localStorage or other browser storage, and clears when you refresh
+            or close this page. For a public website, use a secure backend proxy
+            instead of exposing a key.
+          </p>
+        </div>
+
+        <div class="field">
+          <label>Selected model</label>
+          <select id="settingsModel"></select>
+        </div>
+
+        <div class="field">
+          <label>Maximum response tokens</label>
+          <select id="maxTokens">
+            <option value="700">700 • Fast</option>
+            <option value="900">900 • Normal</option>
+            <option value="1200">1200 • Detailed</option>
+            <option value="2000">2000 • Detailed</option>
+            <option value="3000">3000 • Long</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Temperature</label>
+          <input
+            type="number"
+            id="temperature"
+            min="0"
+            max="1.5"
+            step=".1"
+            value=".6"
+          />
+        </div>
+
+        <div class="field">
+          <label>Assistant voice</label>
+          <select id="voiceSelect"></select>
+          <p class="small-note">
+            Choose the closest available cinematic English voice. Exact Iron Man
+            J.A.R.V.I.S. voice cloning is not included.
+          </p>
+        </div>
+
+        <div class="field">
+          <label>Speaking speed</label>
+          <input
+            type="range"
+            id="voiceRate"
+            min=".7"
+            max="1.4"
+            step=".1"
+            value="1"
+          />
+        </div>
+
+        <div class="field">
+          <label>Recognition language</label>
+          <select id="voiceLanguage">
+            <option value="en-IN">English India</option>
+            <option value="en-US">English US</option>
+            <option value="hi-IN">Hindi</option>
+            <option value="en-GB">English UK</option>
+          </select>
+        </div>
+
+        <label class="small-note">
+          <input type="checkbox" id="speakReplies" checked />
+          Speak AI replies automatically
+        </label>
+
+        <div class="button-row">
+          <button class="primary-btn" onclick="saveSettings()">
+            Save Settings
+          </button>
+          <button class="secondary-btn" onclick="testConnection()">
+            Test API
+          </button>
+        </div>
+
+        <p class="small-note">
+          Model availability, costs and context limits depend on OpenRouter and
+          the selected provider.
+        </p>
+      </div>
+    </div>
+
+    <!-- CODING STUDIO -->
+    <section class="utility-modal" id="codeModal" aria-label="Coding Studio">
+      <header class="utility-head">
+        <strong><i class="fa-solid fa-code"></i> CODING STUDIO</strong
+        ><button class="secondary-btn" onclick="closeUtility('codeModal')">
+          Back to Chat
+        </button>
+      </header>
+      <div class="utility-body code-layout">
+        <div class="utility-panel">
+          <div class="panel-title">Code Editor</div>
+          <select id="codeLanguage" class="utility-input">
+            <option value="html">HTML</option>
+            <option value="javascript">JavaScript</option>
+            <option value="css">CSS</option>
+            <option value="python">Python</option>
+          </select>
+          <textarea
+            id="codeEditor"
+            spellcheck="false"
+            class="code-editor"
+            placeholder="Write your code here..."
+          ></textarea>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="runCode()">
+              <i class="fa-solid fa-play"></i> Run / Preview</button
+            ><button class="secondary-btn" onclick="saveCode()">Save</button
+            ><button class="secondary-btn" onclick="downloadCode()">
+              Download
+            </button>
+          </div>
+          <p class="small-note">
+            HTML, CSS and JavaScript run in a safe preview frame. Python is
+            editable and downloadable here, but needs a Python runtime to
+            execute.
+          </p>
+        </div>
+        <div class="utility-panel preview-panel">
+          <div class="panel-title">Live Preview</div>
+          <iframe
+            id="codePreview"
+            title="Code preview"
+            sandbox="allow-scripts"
+            class="preview-frame"
+          ></iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- PC CONTROL CENTER -->
+    <section
+      class="utility-modal"
+      id="controlModal"
+      aria-label="PC Control Center"
+    >
+      <header class="utility-head">
+        <strong><i class="fa-solid fa-desktop"></i> PC CONTROL CENTER</strong
+        ><button class="secondary-btn" onclick="closeUtility('controlModal')">
+          Back to Chat
+        </button>
+      </header>
+      <div class="utility-body">
+        <div class="utility-panel">
+          <div class="panel-title">Quick actions</div>
+          <div class="control-grid">
+            <button
+              class="control-tile"
+              onclick="openSite('https://www.google.com')"
+            >
+              <i class="fa-brands fa-google"></i><span>Google</span>
+            </button>
+            <button
+              class="control-tile"
+              onclick="openSite('https://www.youtube.com')"
+            >
+              <i class="fa-brands fa-youtube"></i><span>YouTube</span>
+            </button>
+            <button
+              class="control-tile"
+              onclick="openSite('https://mail.google.com')"
+            >
+              <i class="fa-solid fa-envelope"></i><span>Gmail</span>
+            </button>
+            <button
+              class="control-tile"
+              onclick="openSite('https://github.com')"
+            >
+              <i class="fa-brands fa-github"></i><span>GitHub</span>
+            </button>
+            <button
+              class="control-tile"
+              onclick="openSite('https://drive.google.com')"
+            >
+              <i class="fa-brands fa-google-drive"></i><span>Drive</span>
+            </button>
+            <button class="control-tile" onclick="toggleFullscreen()">
+              <i class="fa-solid fa-expand"></i><span>Fullscreen</span>
+            </button>
+            <button class="control-tile" onclick="mediaAction('play')">
+              <i class="fa-solid fa-play"></i><span>Play media</span>
+            </button>
+            <button class="control-tile" onclick="mediaAction('pause')">
+              <i class="fa-solid fa-pause"></i><span>Pause media</span>
+            </button>
+          </div>
+          <div class="panel-title" style="margin-top: 22px">Command line</div>
+          <div class="command-row">
+            <input
+              id="pcCommand"
+              class="utility-input"
+              placeholder="Try: open youtube, search robotics, new chat..."
+              onkeydown="if (event.key === 'Enter') runPCCommand();"
+            /><button class="primary-btn" onclick="runPCCommand()">Run</button>
+          </div>
+          <p class="small-note">
+            Browser permissions limit what a web page can control. This panel
+            does not silently access files, install apps or run operating-system
+            commands.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SMART MEMORY -->
+    <section class="utility-modal" id="memoryModal" aria-label="Smart Memory">
+      <header class="utility-head">
+        <strong><i class="fa-solid fa-brain"></i> SMART MEMORY</strong
+        ><button class="secondary-btn" onclick="closeUtility('memoryModal')">
+          Back to Chat
+        </button>
+      </header>
+      <div class="utility-body">
+        <div class="utility-panel">
+          <div class="panel-title">Saved details</div>
+          <p class="small-note">
+            J.A.R.V.I.S. can use these notes as context in future chats on this
+            browser. Do not save passwords or private information.
+          </p>
+          <textarea
+            id="memoryEditor"
+            class="memory-editor"
+            placeholder="Add preferences, project details or facts you want J.A.R.V.I.S. to remember..."
+          ></textarea>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="saveMemory()">
+              Save memory</button
+            ><button class="secondary-btn" onclick="clearMemory()">
+              Clear memory
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- J.A.R.V.I.S. ADVANCED WORKSPACE -->
+    <section
+      class="mark77-modal"
+      id="mark77Modal"
+      aria-label="J.A.R.V.I.S. Workspace"
+    >
+      <header class="m77-head">
+        <strong
+          ><i class="fa-solid fa-layer-group"></i> J.A.R.V.I.S.
+          WORKSPACE</strong
+        ><button class="secondary-btn" onclick="closeMark77()">
+          Back to Chat
+        </button>
+      </header>
+      <div class="m77-wrap">
+        <div class="m77-grid" id="m77Cards">
+          <button class="m77-card" onclick="m77Show('multi')">
+            <i class="fa-solid fa-code-compare"></i
+            ><span
+              ><b>Multi-AI Brain</b
+              ><small
+                >Ask several models together and compare their answers.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('agent')">
+            <i class="fa-solid fa-diagram-project"></i
+            ><span
+              ><b>AI Agent Mode</b
+              ><small>Plan a goal, run steps and track progress.</small></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('research')">
+            <i class="fa-solid fa-globe"></i
+            ><span
+              ><b>Live Web Research</b
+              ><small
+                >Use online search-enabled models and open source
+                searches.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('memory')">
+            <i class="fa-solid fa-brain"></i
+            ><span
+              ><b>Advanced Smart Memory</b
+              ><small
+                >Save, find and manage personal project notes.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('reader')">
+            <i class="fa-solid fa-file-lines"></i
+            ><span
+              ><b>Document Reader</b
+              ><small>Read PDF, DOCX, TXT, CSV and code files.</small></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('voice')">
+            <i class="fa-solid fa-microphone-lines"></i
+            ><span
+              ><b>Advanced Voice</b
+              ><small
+                >Dictation, spoken replies, wake mode and voice settings.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('pc')">
+            <i class="fa-solid fa-computer"></i
+            ><span
+              ><b>Windows PC Integration</b
+              ><small
+                >Browser controls plus optional local companion bridge.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('coding')">
+            <i class="fa-solid fa-code"></i
+            ><span
+              ><b>Advanced Coding Studio</b
+              ><small
+                >Ask AI to explain, debug or improve editor code.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('data')">
+            <i class="fa-solid fa-chart-column"></i
+            ><span
+              ><b>Data Analysis Studio</b
+              ><small
+                >Load CSV data, inspect columns and calculate summaries.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('library')">
+            <i class="fa-solid fa-book-bookmark"></i
+            ><span
+              ><b>Knowledge Library</b
+              ><small
+                >Save notes and searchable reference material.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('planner')">
+            <i class="fa-solid fa-list-check"></i
+            ><span
+              ><b>Task Planner</b
+              ><small
+                >Organise projects, due dates and task status.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('automation')">
+            <i class="fa-solid fa-wand-magic-sparkles"></i
+            ><span
+              ><b>Command Automation</b
+              ><small>Run safe, saved browser command sequences.</small></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('backup')">
+            <i class="fa-solid fa-box-archive"></i
+            ><span
+              ><b>Chat Export & Backup</b
+              ><small
+                >Export chats and download a local data backup.</small
+              ></span
+            >
+          </button>
+          <button class="m77-card" onclick="m77Show('persona')">
+            <i class="fa-solid fa-masks-theater"></i
+            ><span
+              ><b>AI Personalities</b
+              ><small>Choose a response style or create your own.</small></span
+            >
+          </button>
+        </div>
+
+        <section class="m77-section" id="m77-multi">
+          <h3>Multi-AI Brain</h3>
+          <p>
+            Runs the same prompt through up to three selected OpenRouter models
+            in parallel. Model access and cost depend on your OpenRouter
+            account.
+          </p>
+          <textarea
+            class="m77-area"
+            id="m77MultiPrompt"
+            placeholder="Enter a question for multiple AI models..."
+          ></textarea>
+          <div class="m77-row">
+            <select class="m77-select" id="m77ModelA"></select
+            ><select class="m77-select" id="m77ModelB"></select
+            ><select class="m77-select" id="m77ModelC"></select>
+          </div>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77MultiRun()">
+              Run Multi-AI</button
+            ><button
+              class="secondary-btn"
+              onclick="m77SendToChat('m77MultiOutput')"
+            >
+              Send result to chat
+            </button>
+          </div>
+          <div class="m77-output" id="m77MultiOutput">
+            Results will appear here.
+          </div>
+        </section>
+
+        <section class="m77-section" id="m77-agent">
+          <h3>AI Agent Mode</h3>
+          <p>
+            J.A.R.V.I.S. creates a short plan and works through it step by step.
+            Review the result before using it. This browser agent cannot
+            silently operate other apps.
+          </p>
+          <textarea
+            class="m77-area"
+            id="m77AgentGoal"
+            placeholder="Example: Plan a school science exhibition project with a report and presentation."
+          ></textarea>
+          <div class="m77-row">
+            <button class="primary-btn" onclick="m77RunAgent()">
+              Plan and Execute</button
+            ><button class="secondary-btn" onclick="m77StopAgent()">
+              Stop agent
+            </button>
+          </div>
+          <div class="m77-progress"><span id="m77AgentBar"></span></div>
+          <div class="m77-output" id="m77AgentOutput">Agent is idle.</div>
+        </section>
+
+        <section class="m77-section" id="m77-research">
+          <h3>Live Web Research</h3>
+          <p>
+            Uses OpenRouter's online model routing when available. It may fail
+            if the selected model/provider does not support online search.
+            Search links are also opened directly for independent checking.
+          </p>
+          <input
+            class="m77-input"
+            id="m77ResearchTopic"
+            placeholder="Research topic or question"
+          />
+          <div class="m77-row">
+            <button class="primary-btn" onclick="m77Research()">
+              Research with online AI</button
+            ><button class="secondary-btn" onclick="m77OpenSearch()">
+              Open Google results
+            </button>
+          </div>
+          <div class="m77-output" id="m77ResearchOutput">
+            Research findings will appear here. Check cited links before relying
+            on them.
+          </div>
+        </section>
+
+        <section class="m77-section" id="m77-memory">
+          <h3>Advanced Smart Memory</h3>
+          <p>
+            Memory stays in this browser's local storage. Avoid saving
+            passwords, private keys or sensitive personal details.
+          </p>
+          <input
+            class="m77-input"
+            id="m77MemorySearch"
+            placeholder="Search saved memory"
+            oninput="m77RenderMemory()"
+          /><textarea
+            class="m77-area"
+            id="m77MemoryAdd"
+            placeholder="Add a preference, project fact or reminder..."
+          ></textarea>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77AddMemory()">
+              Save memory note</button
+            ><button class="secondary-btn" onclick="openMemory()">
+              Open full memory editor
+            </button>
+          </div>
+          <div class="m77-list" id="m77MemoryList"></div>
+        </section>
+
+        <section class="m77-section" id="m77-reader">
+          <h3>Document Reader</h3>
+          <p>
+            Extracts readable text from common document formats. Scanned PDFs
+            that contain only images may need OCR and will not extract as normal
+            text.
+          </p>
+          <input
+            class="m77-input"
+            type="file"
+            id="m77ReaderFile"
+            accept=".pdf,.docx,.txt,.md,.csv,.json,.html,.css,.js,.py,.xml,.log"
+          />
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77ReadDocument()">
+              Read document</button
+            ><button class="secondary-btn" onclick="m77ReaderToChat()">
+              Send text to chat</button
+            ><button class="secondary-btn" onclick="m77SaveReaderToLibrary()">
+              Save to library
+            </button>
+          </div>
+          <div class="m77-output" id="m77ReaderOutput">
+            Choose a document to extract its text.
+          </div>
+        </section>
+
+        <section class="m77-section" id="m77-voice">
+          <h3>Advanced Voice Assistant</h3>
+          <p>
+            Uses the browser's Speech Recognition and Speech Synthesis features.
+            Microphone access requires permission and usually HTTPS or
+            localhost.
+          </p>
+          <div class="m77-row">
+            <button class="primary-btn" onclick="startVoice()">
+              Start dictation</button
+            ><button class="secondary-btn" onclick="toggleWakeWord()">
+              Toggle Hey J.A.R.V.I.S.</button
+            ><button class="secondary-btn" onclick="stopVoice()">
+              Stop speaking
+            </button>
+          </div>
+          <div class="m77-row">
+            <select
+              class="m77-select"
+              id="m77VoiceLanguage"
+              onchange="
+                document.getElementById('voiceLanguage').value = this.value
+              "
+            >
+              <option value="en-IN">English India</option>
+              <option value="hi-IN">Hindi</option>
+              <option value="en-US">English US</option>
+              <option value="en-GB">English UK</option></select
+            ><select class="m77-select" id="m77VoiceStyle">
+              <option value="normal">Normal reply</option>
+              <option value="brief">Brief reply</option>
+              <option value="detailed">Detailed reply</option>
+            </select>
+          </div>
+          <div class="m77-output" id="m77VoiceStatus">
+            Voice ready. Try commands such as “open YouTube”, “search robotics”,
+            or “new chat”.
+          </div>
+        </section>
+
+        <section class="m77-section" id="m77-pc">
+          <h3>Windows PC Integration</h3>
+          <p>
+            Browser-only HTML cannot run arbitrary Windows commands, launch
+            local programs freely or read the whole PC. For deeper integration,
+            connect a separate trusted local companion that you create and run
+            yourself.
+          </p>
+          <input
+            class="m77-input"
+            id="m77BridgeUrl"
+            placeholder="Optional local companion URL, e.g. http://127.0.0.1:8765"
+          />
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77SaveBridge()">
+              Save bridge address</button
+            ><button class="secondary-btn" onclick="m77TestBridge()">
+              Test connection</button
+            ><button class="secondary-btn" onclick="openControlCenter()">
+              Open browser controls
+            </button>
+          </div>
+          <div class="m77-output" id="m77PCOutput">
+            Local bridge is not configured. Browser shortcuts continue to work
+            without it.
+          </div>
+        </section>
+
+        <section class="m77-section" id="m77-coding">
+          <h3>Advanced Coding Studio</h3>
+          <p>
+            Open the existing editor, then ask AI to review or improve the
+            current code. Preview support depends on the language; Python still
+            needs a Python runtime.
+          </p>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="openCodeStudio()">
+              Open code editor</button
+            ><button class="secondary-btn" onclick="m77ReviewCode()">
+              AI review current code</button
+            ><button class="secondary-btn" onclick="m77ExplainCode()">
+              Explain current code
+            </button>
+          </div>
+          <div class="m77-output" id="m77CodingOutput">
+            Your current code will be sent to the selected AI only when you
+            request a review or explanation.
+          </div>
+        </section>
+
+        <section class="m77-section" id="m77-data">
+          <h3>Data Analysis Studio</h3>
+          <p>
+            Load a CSV file to inspect rows, columns, missing values and numeric
+            summaries. This analysis runs locally in your browser.
+          </p>
+          <input
+            class="m77-input"
+            type="file"
+            id="m77CSVFile"
+            accept=".csv,text/csv"
+          />
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77AnalyzeCSV()">
+              Analyze CSV</button
+            ><button class="secondary-btn" onclick="m77ExportCSVSummary()">
+              Download summary
+            </button>
+          </div>
+          <div class="m77-output" id="m77DataOutput">No dataset loaded.</div>
+        </section>
+
+        <section class="m77-section" id="m77-library">
+          <h3>Knowledge Library</h3>
+          <p>
+            Save useful notes, extracted document text and project references in
+            this browser. Search the saved items below.
+          </p>
+          <input
+            class="m77-input"
+            id="m77LibrarySearch"
+            placeholder="Search library"
+            oninput="m77RenderLibrary()"
+          /><input
+            class="m77-input"
+            id="m77LibraryTitle"
+            placeholder="Title"
+          /><textarea
+            class="m77-area"
+            id="m77LibraryBody"
+            placeholder="Paste or write knowledge to save..."
+          ></textarea>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77AddLibrary()">
+              Save knowledge
+            </button>
+          </div>
+          <div class="m77-list" id="m77LibraryList"></div>
+        </section>
+
+        <section class="m77-section" id="m77-planner">
+          <h3>Task Planner & Project Manager</h3>
+          <p>
+            Tasks are saved locally. Add a due date and mark work complete as
+            you progress.
+          </p>
+          <div class="m77-row">
+            <input
+              class="m77-input"
+              id="m77TaskName"
+              placeholder="Task or project step"
+            /><input class="m77-input" type="date" id="m77TaskDate" />
+          </div>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77AddTask()">Add task</button
+            ><button class="secondary-btn" onclick="m77ClearDone()">
+              Clear completed
+            </button>
+          </div>
+          <div class="m77-list" id="m77TaskList"></div>
+        </section>
+
+        <section class="m77-section" id="m77-automation">
+          <h3>Command Automation</h3>
+          <p>
+            Create safe browser action sequences from the available commands. No
+            shell commands, file deletion or hidden background actions are
+            supported.
+          </p>
+          <input
+            class="m77-input"
+            id="m77MacroName"
+            placeholder="Automation name"
+          /><textarea
+            class="m77-area"
+            id="m77MacroCommands"
+            placeholder="One command per line: open youtube&#10;search arduino projects&#10;new chat"
+          ></textarea>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77SaveMacro()">
+              Save automation
+            </button>
+          </div>
+          <div class="m77-list" id="m77MacroList"></div>
+        </section>
+
+        <section class="m77-section" id="m77-backup">
+          <h3>Chat Export & Backup</h3>
+          <p>
+            Export chat history as JSON or a readable text file. A full backup
+            includes chats, memory, library notes, tasks, macros and settings
+            except your API key.
+          </p>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77ExportChat()">
+              Export current chat</button
+            ><button class="secondary-btn" onclick="m77ExportAll()">
+              Download full backup</button
+            ><button
+              class="secondary-btn"
+              onclick="document.getElementById('m77ImportFile').click()"
+            >
+              Restore backup</button
+            ><input
+              type="file"
+              id="m77ImportFile"
+              hidden
+              accept=".json,application/json"
+              onchange="m77ImportBackup(event)"
+            />
+          </div>
+          <div class="m77-output" id="m77BackupOutput">
+            Your data remains in this browser unless you export it.
+          </div>
+        </section>
+
+        <section class="m77-section" id="m77-persona">
+          <h3>Custom AI Personalities</h3>
+          <p>
+            Select a response style or save your own. Personality instructions
+            are added to the AI system prompt.
+          </p>
+          <select
+            class="m77-select"
+            id="m77PersonaSelect"
+            onchange="m77ChoosePersona(this.value)"
+          >
+            <option value="default">J.A.R.V.I.S. — Balanced</option>
+            <option value="tutor">Tutor — Simple explanations</option>
+            <option value="coder">Developer — Technical and precise</option>
+            <option value="researcher">
+              Researcher — Careful and evidence-focused
+            </option>
+            <option value="concise">Quick — Short answers</option>
+            <option value="custom">Custom personality</option></select
+          ><input
+            class="m77-input"
+            id="m77PersonaName"
+            placeholder="Custom personality name"
+          /><textarea
+            class="m77-area"
+            id="m77PersonaText"
+            placeholder="Describe how J.A.R.V.I.S. should respond..."
+          ></textarea>
+          <div class="utility-actions">
+            <button class="primary-btn" onclick="m77SavePersona()">
+              Save custom personality
+            </button>
+          </div>
+          <div class="m77-output" id="m77PersonaStatus">
+            Current personality: Balanced J.A.R.V.I.S..
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- MARK 88 COMMAND DECK -->
+    <section
+      class="j88-overlay"
+      id="j88Deck"
+      aria-label="J.A.R.V.I.S. Command Deck"
+    >
+      <div class="j88-shell">
+        <header class="j88-head">
+          <div>
+            <h2>
+              <i class="fa-solid fa-satellite-dish"></i> J.A.R.V.I.S. // COMMAND
+              DECK
+            </h2>
+            <small>INTELLIGENCE • VOICE • VISION • TASKS • SYSTEM STATUS</small>
+          </div>
+          <button class="secondary-btn" onclick="closeCommandDeck()">
+            Back to Chat
+          </button>
+        </header>
+        <div class="j88-grid">
+          <section class="j88-card" style="grid-column: 1/-1">
+            <h3><i class="fa-solid fa-microchip"></i> LIVE AI MODEL LIBRARY</h3>
+            <p>
+              Browse the current OpenRouter catalogue, search models, inspect
+              context and pricing metadata, and switch models without reloading
+              J.A.R.V.I.S.. The catalogue size changes over time; it does not
+              mean every model is free. “Free endpoint” labels are based on the
+              live listing and still have provider limits.
+            </p>
+            <div class="j100-model-tools">
+              <input
+                id="j100ModelSearch"
+                type="search"
+                placeholder="Search 600+ catalogue entries by name or provider..."
+                oninput="j100RenderModels()"
+              />
+              <select id="j100ModelFilter" onchange="j100RenderModels()">
+                <option value="all">All listed models</option>
+                <option value="free">Free-labelled endpoints</option>
+                <option value="freezero">Zero-priced listing</option>
+                <option value="vision">Image input listed</option>
+                <option value="long">Context 100K+</option>
+              </select>
+            </div>
+            <div class="j100-model-meta" id="j100ModelMeta">
+              <span class="j100-pill">Catalogue not loaded</span>
+            </div>
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="loadModels()">
+                Refresh live catalogue
+              </button>
+              <button class="j88-btn alt" onclick="j100UseAutoFree()">
+                Use Auto Free Model
+              </button>
+            </div>
+            <div class="j100-model-list" id="j100ModelList">
+              <div class="j88-output">
+                Load the live catalogue to browse available models.
+              </div>
+            </div>
+          </section>
+          <section class="j88-card">
+            <h3>
+              <i class="fa-solid fa-gauge-high"></i> SPEED & RESPONSE TELEMETRY
+            </h3>
+            <p>
+              Measures actual J.A.R.V.I.S. request timings in this browser.
+              Provider queue, model load, internet and account limits affect
+              response speed; this panel does not fake benchmark scores.
+            </p>
+            <div class="j100-performance">
+              <div><b id="j100FirstToken">—</b><span>First token</span></div>
+              <div><b id="j100TotalTime">—</b><span>Last response</span></div>
+              <div><b id="j100ModelCount">—</b><span>Models loaded</span></div>
+            </div>
+            <div class="j88-output" id="j100SpeedNote">
+              Streaming is enabled. First-token timing will appear after your
+              next message.
+            </div>
+          </section>
+          <section class="j88-card">
+            <h3>
+              <i class="fa-solid fa-wand-magic-sparkles"></i> SMART ROUTING &
+              FAST MODE
+            </h3>
+            <p>
+              Auto Free routes through OpenRouter's free-model router. Normal
+              model selection stays under your control. Context trimming and
+              streaming help reduce overhead, but cannot guarantee instant model
+              inference.
+            </p>
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="j100UseAutoFree()">
+                Auto Free Model
+              </button>
+              <button class="j88-btn alt" onclick="j100RestoreModel()">
+                Restore selected model
+              </button>
+            </div>
+            <div class="j88-output" id="j100RouterStatus">
+              Current model: saved selection.
+            </div>
+          </section>
+          <section class="j88-card">
+            <h3><i class="fa-solid fa-brain"></i> AI BRAIN & ROUTER</h3>
+            <p>
+              Choose automatic intent routing or a focused mode. Research mode
+              can request OpenRouter's online provider when supported by the
+              selected model.
+            </p>
+            <select class="j88-input" id="j88BrainMode">
+              <option value="auto">Auto route intent</option>
+              <option value="general">General assistant</option>
+              <option value="study">Study tutor</option>
+              <option value="coding">Coding engineer</option>
+              <option value="research">Online research</option>
+              <option value="quick">Quick answer</option>
+            </select>
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="j88SetBrainMode()">
+                Apply brain mode</button
+              ><button class="j88-btn alt" onclick="loadModels()">
+                Refresh model list
+              </button>
+            </div>
+            <div class="j88-output" id="j88BrainOutput">
+              Router ready. Auto mode detects study, coding, research and
+              general requests.
+            </div>
+          </section>
+          <section class="j88-card">
+            <h3><i class="fa-solid fa-microphone-lines"></i> VOICE CONTROL</h3>
+            <p>
+              Use browser speech recognition and speech synthesis. Hands-free
+              mode needs microphone permission and a supported browser; say “Hey
+              J.A.R.V.I.S.” followed by a command.
+            </p>
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="startVoice()">
+                Speak one command</button
+              ><button class="j88-btn" onclick="toggleWakeWord()">
+                Toggle Hey J.A.R.V.I.S.</button
+              ><button class="j88-btn alt" onclick="stopVoice()">
+                Stop voice
+              </button>
+            </div>
+            <div class="j88-output" id="j88VoiceOutput">Voice system idle.</div>
+          </section>
+          <section class="j88-card">
+            <h3><i class="fa-solid fa-eye"></i> LIVE VISION</h3>
+            <p>
+              Start your camera, then ask the selected vision-capable model to
+              describe the current frame. Camera frames are sent only when you
+              press Analyze.
+            </p>
+            <video
+              id="j88Video"
+              class="j88-camera"
+              autoplay
+              muted
+              playsinline
+            ></video
+            ><canvas id="j88Canvas" hidden></canvas>
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="j88StartCamera()">
+                Start camera</button
+              ><button class="j88-btn" onclick="j88AnalyzeFrame()">
+                Analyze frame</button
+              ><button class="j88-btn alt" onclick="j88StopCamera()">
+                Stop camera
+              </button>
+            </div>
+            <div class="j88-output" id="j88VisionOutput">
+              Camera is off. Allow access only when you want to use vision.
+            </div>
+          </section>
+          <section class="j88-card">
+            <h3><i class="fa-solid fa-list-check"></i> PERSONAL TASKS</h3>
+            <p>
+              Tasks and due dates are stored locally in this browser. Browser
+              notifications are optional and require permission.
+            </p>
+            <input
+              class="j88-input"
+              id="j88TaskText"
+              placeholder="Add a task or reminder"
+            /><input class="j88-input" id="j88TaskDate" type="datetime-local" />
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="j88AddTask()">Add task</button
+              ><button class="j88-btn alt" onclick="j88RequestNotifications()">
+                Enable notifications
+              </button>
+            </div>
+            <div id="j88TaskList" class="j88-output">No tasks yet.</div>
+          </section>
+          <section class="j88-card">
+            <h3><i class="fa-solid fa-chart-line"></i> SYSTEM DIAGNOSTICS</h3>
+            <p>
+              Browser-visible diagnostics only. CPU temperature and whole-PC
+              CPU/RAM usage are not exposed to ordinary web pages.
+            </p>
+            <div id="j88Diagnostics"></div>
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="j88RefreshDiagnostics()">
+                Refresh diagnostics</button
+              ><button class="j88-btn alt" onclick="j88ExportDiagnostics()">
+                Export report
+              </button>
+            </div>
+          </section>
+          <section class="j88-card">
+            <h3><i class="fa-solid fa-list-check"></i> AGENT WORKBENCH</h3>
+            <p>
+              Plan multi-step work, create a structured deliverable, and
+              download it. The browser agent cannot silently operate desktop
+              apps or arbitrary local files.
+            </p>
+            <textarea
+              id="j88AgentGoal"
+              placeholder="Describe the outcome you want J.A.R.V.I.S. to prepare..."
+            ></textarea>
+            <div class="j88-actions">
+              <button class="j88-btn" onclick="j88RunAgent()">
+                Run agent workflow</button
+              ><button class="j88-btn alt" onclick="j88StopAgent()">Stop</button
+              ><button class="j88-btn alt" onclick="j88DownloadAgent()">
+                Download output
+              </button>
+            </div>
+            <div class="j88-output" id="j88AgentOutput">Agent standing by.</div>
+          </section>
+          <section class="j88-card">
+            <h3>
+              <i class="fa-solid fa-shield-halved"></i> PRIVACY & CAPABILITIES
+            </h3>
+            <p>
+              All data saved by these add-ons stays in this browser unless a
+              feature explicitly sends it to OpenRouter. Camera images are only
+              transmitted on Analyze. Avoid saving passwords or sensitive
+              information.
+            </p>
+            <div class="j88-actions">
+              <button class="j88-btn alt" onclick="j88ClearTasks()">
+                Clear completed tasks</button
+              ><button class="j88-btn alt" onclick="j88ClearLocalAddons()">
+                Clear add-on data
+              </button>
+            </div>
+            <div class="j88-output">
+              Browser-only mode: no ESP32 control, no unrestricted Windows
+              control, no hidden file-system access, no background service.
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+    <div id="toast"></div>
+
+    <script>
+      "use strict";
+
+      /* CONFIGURATION */
+
+      const API = "https://openrouter.ai/api/v1";
+
+      // Security migration: remove legacy API keys saved by older J.A.R.V.I.S. builds.
+      // The key is now held in memory only and is cleared when this page is refreshed.
+      try {
+        localStorage.removeItem("j_key");
+      } catch {}
+
+      const SYSTEM_BASE =
+        "You are J.A.R.V.I.S., a helpful AI assistant. Be accurate, clear and practical. Explain difficult ideas in simple language. Do not claim to perform actions you cannot perform.";
+
+      const FALLBACK_MODELS = [
+        "openai/gpt-4o-mini",
+        "google/gemini-2.5-flash",
+        "deepseek/deepseek-chat",
+        "anthropic/claude-3.5-haiku",
+        "qwen/qwen3-32b",
+        "mistralai/mistral-small-3.1-24b-instruct",
+      ];
+
+      function readStore(key, fallback) {
+        try {
+          return JSON.parse(localStorage.getItem(key)) ?? fallback;
+        } catch {
+          return fallback;
+        }
+      }
+
+      function store(key, value) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch {
+          toast("Browser storage is full.");
+        }
+      }
+
+      let settings = {
+        key: "",
+        model: localStorage.getItem("j_model") || "openrouter/free",
+        maxTokens: Number(localStorage.getItem("j_max")) || 900,
+        temperature: Number(localStorage.getItem("j_temp")) || 0.6,
+      };
+
+      let chats = readStore("j_chats", []);
+      let models = [];
+      let conversation = [];
+      let currentChat = null;
+      let attached = null;
+      let generating = false;
+      let aborter = null;
+      let apiRequestBusy = false;
+      let recognition = null;
+      let voiceBusy = false;
+
+      /* HELPERS */
+
+      function toast(message) {
+        const el = document.getElementById("toast");
+        el.textContent = message;
+        el.classList.add("show");
+        clearTimeout(toast.timer);
+        toast.timer = setTimeout(() => el.classList.remove("show"), 3000);
+      }
+
+      function setStatus(message) {
+        document.getElementById("statusText").textContent = message;
+        const core = document.querySelector(".welcome .core");
+        if (core) {
+          core.classList.toggle(
+            "thinking",
+            /thinking|generating/i.test(message),
+          );
+          core.classList.toggle("listening", /listening/i.test(message));
+        }
+      }
+
+      function delay(ms) {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      }
+
+      function resizeInput(el) {
+        el.style.height = "auto";
+        el.style.height = Math.min(el.scrollHeight, 170) + "px";
+      }
+
+      function handleEnter(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      }
+
+      function estimateTokens(text) {
+        return Math.ceil(String(text || "").length / 3.5);
+      }
+
+      function scrollBottom() {
+        const area = document.getElementById("chatArea");
+        area.scrollTop = area.scrollHeight;
+      }
+
+      function toggleSidebar() {
+        document.getElementById("sidebar").classList.toggle("open");
+      }
+
+      function closeSidebar() {
+        document.getElementById("sidebar").classList.remove("open");
+      }
+
+      /* SETTINGS */
+
+      function openSettings() {
+        // Refill only from this page's current memory, never from browser storage.
+        document.getElementById("apiKey").value = settings.key;
+        document.getElementById("settingsModel").value = settings.model;
+        document.getElementById("maxTokens").value = settings.maxTokens;
+        document.getElementById("temperature").value = settings.temperature;
+        document.getElementById("settingsModal").classList.add("show");
+      }
+
+      function closeSettings() {
+        document.getElementById("settingsModal").classList.remove("show");
+      }
+
+      function saveSettings() {
+        settings.key = document.getElementById("apiKey").value.trim();
+        settings.model = document.getElementById("settingsModel").value;
+        settings.maxTokens = Number(document.getElementById("maxTokens").value);
+        settings.temperature = Math.max(
+          0,
+          Math.min(
+            1.5,
+            Number(document.getElementById("temperature").value) || 0.6,
+          ),
+        );
+
+        // Never persist the API key. Clear any key left by older versions.
+        try {
+          localStorage.removeItem("j_key");
+        } catch {}
+        localStorage.setItem("j_model", settings.model);
+        localStorage.setItem("j_max", settings.maxTokens);
+        localStorage.setItem("j_temp", settings.temperature);
+
+        document.getElementById("modelSelect").value = settings.model;
+        closeSettings();
+        toast("Settings saved. API key is memory-only and clears on refresh.");
+      }
+
+      function headers() {
+        if (!settings.key) {
+          throw new Error("Add your OpenRouter API key in Settings first.");
+        }
+
+        return {
+          Authorization: "Bearer " + settings.key,
+          "Content-Type": "application/json",
+          "HTTP-Referer": location.origin,
+          "X-Title": "J.A.R.V.I.S. Mark 76",
+        };
+      }
+
+      async function testConnection() {
+        try {
+          if (!settings.key) {
+            toast("Add your API key first.");
+            return;
+          }
+
+          setStatus("Testing API...");
+
+          const r = await fetch(API + "/auth/key", { headers: headers() });
+          const d = await r.json().catch(() => ({}));
+
+          if (!r.ok) throw new Error(apiError(r.status, d));
+
+          setStatus("API connected");
+          toast("OpenRouter connection successful");
+        } catch (e) {
+          setStatus("API problem");
+          toast(e.message);
+        }
+      }
+
+      /* MODELS */
+
+      function modelLabel(id) {
+        return id.split("/").pop().replace(/[-_]/g, " ");
+      }
+
+      function fillModelSelects() {
+        const selects = [
+          document.getElementById("modelSelect"),
+          document.getElementById("settingsModel"),
+        ];
+
+        selects.forEach((select) => {
+          const old = settings.model;
+          select.innerHTML = "";
+
+          if (select.id === "modelSelect" || select.id === "settingsModel") {
+            const auto = document.createElement("option");
+            auto.value = "openrouter/free";
+            auto.textContent = "Auto Free Model (OpenRouter)";
+            select.appendChild(auto);
+          }
+
+          models.forEach((m) => {
+            const option = document.createElement("option");
+            option.value = m.id;
+            option.textContent = modelLabel(m.id);
+            select.appendChild(option);
+          });
+
+          // Do not keep a stale model as a selectable "saved" option.
+          if (!models.some((m) => m.id === old) && old !== "openrouter/free") {
+            settings.model = "openrouter/free";
+            try {
+              localStorage.setItem("j_model", settings.model);
+            } catch {}
+          }
+          select.value = settings.model;
+        });
+      }
+
+      async function loadModels() {
+        setStatus("Loading models...");
+
+        try {
+          const response = await fetch(API + "/models", {
+            cache: "no-store",
+            headers: settings.key
+              ? { Authorization: "Bearer " + settings.key }
+              : {},
+          });
+
+          if (!response.ok) throw new Error("Could not load models");
+
+          const data = await response.json();
+
+          models = (data.data || []).filter(
+            (m) => m.id && !m.id.toLowerCase().includes("image-generation"),
+          );
+
+          models.sort((a, b) => a.id.localeCompare(b.id));
+
+          if (!models.length) throw new Error("No models found");
+
+          fillModelSelects();
+          j100RenderModels();
+          j100UpdateTelemetry(null);
+          setStatus("Models loaded");
+          toast(models.length.toLocaleString() + " models loaded");
+        } catch (e) {
+          models = FALLBACK_MODELS.map((id) => ({ id }));
+          fillModelSelects();
+          j100RenderModels();
+          j100UpdateTelemetry(null);
+          setStatus("Fallback model list");
+          toast("Using saved model list");
+        }
+      }
+
+      function changeModel(id) {
+        settings.model = id;
+        localStorage.setItem("j_model", id);
+        document.getElementById("settingsModel").value = id;
+        if (id !== "openrouter/free") j100LastModel = id;
+        j100RenderModels();
+        const note = document.getElementById("j100RouterStatus");
+        if (note) note.textContent = "Current model: " + id;
+        toast("Model changed");
+      }
+
+      /* AI MODES */
+
+      function modePrompt() {
+        const mode = document.getElementById("modeSelect").value;
+
+        const prompts = {
+          general: "Answer helpfully and clearly.",
+          study:
+            "Teach like a patient school tutor. Use simple language, examples and step-by-step explanations.",
+          coding:
+            "Act as a careful programming assistant. Give complete working code when asked. Explain important changes.",
+          research:
+            "Give a structured, balanced and detailed answer. Clearly mark uncertainty and do not invent sources.",
+          creative: "Help with original ideas and creative work.",
+          quick: "Keep answers concise and direct.",
+        };
+
+        return prompts[mode] || prompts.general;
+      }
+
+      function buildMessages(history, budget) {
+        const savedMemory = readStore("j_memory", "");
+        const memoryPrompt = savedMemory
+          ? "\nUser-approved memory (use only when relevant):\n" +
+            savedMemory.slice(0, 5000)
+          : "";
+        const system =
+          SYSTEM_BASE + "\n" + modePrompt() + m77PersonaPrompt() + memoryPrompt;
+        let used = estimateTokens(system);
+        const chosen = [];
+
+        const recentHistory = history.slice(-36);
+        for (let i = recentHistory.length - 1; i >= 0; i--) {
+          const item = recentHistory[i];
+          const cost = estimateTokens(item.content) + 8;
+
+          if (used + cost > budget) break;
+
+          chosen.unshift({
+            role: item.role,
+            content: item.content,
+          });
+
+          used += cost;
+        }
+
+        return [{ role: "system", content: system }, ...chosen];
+      }
+
+      /* STREAMING AI */
+
+      async function requestStream(history, budget, modelId = settings.model) {
+        const messages = buildMessages(history, budget);
+        const controller = new AbortController();
+        aborter = controller;
+        let timedOut = false;
+        const timer = setTimeout(() => {
+          timedOut = true;
+          controller.abort();
+        }, 90000);
+        j100RequestStarted = performance.now();
+        j100FirstTokenRecorded = false;
+        j100FirstTokenMs = null;
+
+        try {
+          const response = await fetch(API + "/chat/completions", {
+            method: "POST",
+            headers: headers(),
+            signal: controller.signal,
+            cache: "no-store",
+            body: JSON.stringify({
+              model: modelId,
+              messages,
+              temperature: settings.temperature,
+              max_tokens: settings.maxTokens,
+              stream: true,
+              transforms: [],
+            }),
+          });
+
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            const err = new Error(apiError(response.status, data));
+            err.status = response.status;
+            err.retryAfterMs = getRetryDelay(response.headers, data);
+            err.providerMessage = data?.error?.message || data?.message || "";
+            throw err;
+          }
+
+          if (!response.body)
+            throw new Error(
+              "Streaming is unavailable. Try another browser or model.",
+            );
+
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          let answer = "";
+          let lastPaint = 0;
+
+          const processSSELine = (line) => {
+            if (!line.startsWith("data:")) return;
+            const raw = line.slice(5).trim();
+            if (!raw || raw === "[DONE]") return;
+            let data;
+            try {
+              data = JSON.parse(raw);
+            } catch {
+              return;
+            }
+            if (data?.error) {
+              const message =
+                data.error.message ||
+                "The provider returned a streaming error.";
+              const err = new Error(message);
+              err.status = Number(data.error.code || data.error.status || 0);
+              throw err;
+            }
+            const delta = data.choices?.[0]?.delta?.content;
+            if (typeof delta === "string" && delta) {
+              if (!j100FirstTokenRecorded) {
+                j100FirstTokenRecorded = true;
+                j100FirstTokenMs = performance.now() - j100RequestStarted;
+                j100UpdateTelemetry(null);
+              }
+              answer += delta;
+              // Avoid a layout/scroll operation for every tiny token chunk.
+              const now = performance.now();
+              if (now - lastPaint >= 45) {
+                updateStreamingMessage(answer);
+                lastPaint = now;
+              }
+            }
+          };
+
+          while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
+            for (const line of lines) processSSELine(line.trimEnd());
+          }
+          buffer += decoder.decode();
+          if (buffer.trim()) processSSELine(buffer.trim());
+          if (!answer)
+            throw new Error(
+              "The model returned an empty answer. Try another model or send again.",
+            );
+          updateStreamingMessage(answer);
+          return answer;
+        } catch (error) {
+          if (timedOut)
+            throw new Error(
+              "The request timed out after 90 seconds. Try a faster model or shorter prompt.",
+            );
+          if (error?.name === "AbortError")
+            throw new Error("Request cancelled.");
+          if (error instanceof TypeError)
+            throw new Error(
+              "Network connection failed. Check your internet connection and try again.",
+            );
+          throw error;
+        } finally {
+          j100UpdateTelemetry(performance.now() - j100RequestStarted);
+          clearTimeout(timer);
+          if (aborter === controller) aborter = null;
+        }
+      }
+
+      function getRetryDelay(responseHeaders, data) {
+        const raw = responseHeaders?.get?.("Retry-After");
+        if (raw) {
+          const seconds = Number(raw);
+          if (Number.isFinite(seconds))
+            return Math.max(1000, Math.min(60000, seconds * 1000));
+          const dateMs = Date.parse(raw);
+          if (Number.isFinite(dateMs))
+            return Math.max(1000, Math.min(60000, dateMs - Date.now()));
+        }
+        const reset = responseHeaders?.get?.("X-RateLimit-Reset");
+        if (reset) {
+          const value = Number(reset);
+          if (Number.isFinite(value)) {
+            const ms =
+              value > 1e12
+                ? value - Date.now()
+                : value > 1e9
+                  ? value * 1000 - Date.now()
+                  : value * 1000;
+            if (ms > 0) return Math.max(1000, Math.min(60000, ms));
+          }
+        }
+        const msg = String(data?.error?.message || "");
+        const waitMatch = msg.match(
+          /(?:retry|try again|reset)\s+(?:in\s+)?(\d+(?:\.\d+)?)\s*(s|sec|seconds?)/i,
+        );
+        if (waitMatch)
+          return Math.max(1000, Math.min(60000, Number(waitMatch[1]) * 1000));
+        return null;
+      }
+
+      async function fetchWithRateRetry(url, options, label = "API request") {
+        for (let attempt = 0; ; attempt++) {
+          const response = await fetch(url, options);
+          if (response.status !== 429 || attempt >= 2) return response;
+          const data = await response
+            .clone()
+            .json()
+            .catch(() => ({}));
+          const waitMs = Math.min(
+            60000,
+            (getRetryDelay(response.headers, data) ||
+              2500 * Math.pow(2, attempt)) + Math.floor(Math.random() * 500),
+          );
+          setStatus(
+            label +
+              " rate-limited — retrying in " +
+              Math.ceil(waitMs / 1000) +
+              "s...",
+          );
+          await delay(waitMs);
+        }
+      }
+
+      async function getAI(history) {
+        // A short bounded retry handles transient provider throttling without
+        // hammering the API. Account/day limits still require the provider reset.
+        const maxRetries = 2;
+        for (let attempt = 0; ; attempt++) {
+          try {
+            return await requestStream(history, 9000, settings.model);
+          } catch (error) {
+            if (error?.status !== 429 || attempt >= maxRetries) {
+              if (error?.status === 429) {
+                throw new Error(
+                  "OpenRouter is still rate-limiting this key or model after two retries. Wait for the provider limit to reset, or choose another model. Your API key is not necessarily wrong.",
+                );
+              }
+              throw error;
+            }
+            const fallback = error.retryAfterMs || 2500 * Math.pow(2, attempt);
+            const waitMs = Math.min(
+              60000,
+              fallback + Math.floor(Math.random() * 500),
+            );
+            setStatus(
+              "Rate limited — retrying in " + Math.ceil(waitMs / 1000) + "s...",
+            );
+            await delay(waitMs);
+            setStatus("Retrying AI request...");
+          }
+        }
+      }
+
+      function apiError(status, data) {
+        const msg = data?.error?.message || data?.message || "";
+
+        if (status === 400)
+          return "Invalid request. Check the model and message size. " + msg;
+        if (status === 401) return "Invalid API key. Check Settings.";
+        if (status === 402) return "Insufficient OpenRouter credits.";
+        if (status === 403) return "Access denied. Check model permissions.";
+        if (status === 404) return "Model not found. Select another model.";
+        if (status === 408 || status === 504)
+          return "Request timed out. Try again.";
+        if (status === 413) return "Request too large. Start a new chat.";
+        if (status === 429)
+          return "OpenRouter rate limit reached. J.A.R.V.I.S. will wait and retry automatically.";
+        if (status >= 500) return "AI provider is temporarily unavailable.";
+        return msg || "API error " + status;
+      }
+
+      /* CHAT MESSAGES */
+
+      function removeWelcome() {
+        document.getElementById("welcome")?.remove();
+      }
+
+      function makeStreamingMessage() {
+        const row = document.createElement("div");
+        row.className = "message assistant";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.innerHTML = '<i class="fa-solid fa-atom"></i>';
+
+        const body = document.createElement("div");
+        body.className = "message-body";
+
+        const name = document.createElement("div");
+        name.className = "message-name";
+        name.textContent = "J.A.R.V.I.S.";
+
+        const text = document.createElement("div");
+        text.className = "message-text";
+        text.textContent = "...";
+
+        body.append(name, text);
+        row.append(avatar, body);
+
+        document.getElementById("chatContent").append(row);
+        scrollBottom();
+
+        return { row, text };
+      }
+
+      function updateStreamingMessage(answer) {
+        const row = document.querySelector(
+          "#chatContent .message.assistant:last-child .message-text",
+        );
+
+        if (row) row.textContent = answer;
+        scrollBottom();
+      }
+
+      function addMessage(role, content) {
+        const row = document.createElement("div");
+        row.className = "message " + role;
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.innerHTML =
+          role === "user"
+            ? '<i class="fa-solid fa-user"></i>'
+            : '<i class="fa-solid fa-atom"></i>';
+
+        const body = document.createElement("div");
+        body.className = "message-body";
+
+        const name = document.createElement("div");
+        name.className = "message-name";
+        name.textContent = role === "user" ? "YOU" : "J.A.R.V.I.S.";
+
+        const text = document.createElement("div");
+        text.className = "message-text";
+        text.textContent = content;
+
+        body.append(name, text);
+
+        if (role === "assistant") {
+          const actions = document.createElement("div");
+          actions.className = "message-actions";
+
+          const copy = document.createElement("button");
+          copy.textContent = "Copy";
+          copy.onclick = () => copyText(content);
+
+          const read = document.createElement("button");
+          read.textContent = "Speak";
+          read.onclick = () => speak(content);
+
+          actions.append(copy, read);
+          body.append(actions);
+        }
+
+        row.append(avatar, body);
+        document.getElementById("chatContent").append(row);
+        scrollBottom();
+      }
+
+      /* SEND MESSAGE */
+
+      async function sendMessage() {
+        if (generating) return;
+
+        const input = document.getElementById("prompt");
+        let text = input.value.trim();
+
+        if (!text && !attached) return;
+
+        const rememberMatch = text.match(
+          /^(?:remember that|remember|save this)\s*[:,-]?\s*(.+)$/i,
+        );
+        if (rememberMatch && !attached) {
+          const old = readStore("j_memory", "");
+          const updated =
+            (old ? old + "\n" : "") + "• " + rememberMatch[1].trim();
+          store("j_memory", updated);
+          input.value = "";
+          resizeInput(input);
+          removeWelcome();
+          addMessage("user", text);
+          addMessage(
+            "assistant",
+            "Saved to Smart Memory. You can review or clear it from the sidebar.",
+          );
+          conversation.push(
+            { role: "user", content: text },
+            { role: "assistant", content: "Saved to Smart Memory." },
+          );
+          saveChat();
+          return;
+        }
+        if (
+          /^(what do you remember|show my memory|what is in your memory)\??$/i.test(
+            text,
+          ) &&
+          !attached
+        ) {
+          const memory = readStore("j_memory", "No saved memory yet.");
+          input.value = "";
+          resizeInput(input);
+          removeWelcome();
+          addMessage("user", text);
+          addMessage("assistant", memory);
+          return;
+        }
+
+        if (!settings.key) {
+          openSettings();
+          toast("Add your API key to start.");
+          return;
+        }
+
+        if (attached) {
+          text +=
+            "\n\nAttached document: " + attached.name + "\n\n" + attached.text;
+        }
+        const routedMode = j88RoutePrompt(text);
+
+        input.value = "";
+        resizeInput(input);
+
+        removeWelcome();
+        addMessage("user", text);
+
+        conversation.push({ role: "user", content: text });
+
+        if (conversation.length > 100) {
+          conversation = conversation.slice(-100);
+        }
+
+        clearAttachment();
+        saveChat();
+
+        generating = true;
+        document.getElementById("sendBtn").disabled = true;
+
+        setStatus("Thinking...");
+
+        const message = makeStreamingMessage();
+
+        try {
+          const answer =
+            routedMode === "research"
+              ? await j88OnlineResearch(conversation)
+              : await getAI(conversation);
+
+          message.text.textContent = answer;
+          conversation.push({ role: "assistant", content: answer });
+
+          saveChat();
+          setStatus("Ready");
+
+          if (document.getElementById("speakReplies").checked) {
+            speak(answer);
+          }
+        } catch (error) {
+          message.text.textContent = "J.A.R.V.I.S. Error: " + error.message;
+          setStatus("Error");
+        } finally {
+          generating = false;
+          document.getElementById("sendBtn").disabled = false;
+          input.focus();
+        }
+      }
+
+      function useSuggestion(text) {
+        document.getElementById("prompt").value = text;
+        sendMessage();
+      }
+
+      /* CHAT HISTORY */
+
+      function newChat() {
+        if (generating && aborter) aborter.abort();
+
+        generating = false;
+        conversation = [];
+        currentChat = Date.now().toString();
+
+        document.getElementById("chatContent").innerHTML = `
+    <div class="welcome" id="welcome">
+      <div class="core"><i class="fa-solid fa-atom"></i></div>
+      <h1>Welcome to <span>J.A.R.V.I.S.</span></h1>
+      <p>Your personal AI workspace.<br>Think, learn, research and build.</p>
+      <div class="suggestions">
+        <button class="suggestion" onclick="useSuggestion('Explain a difficult topic in simple words.')">Study something</button>
+        <button class="suggestion" onclick="useSuggestion('Help me build a useful Python project.')">Build a project</button>
+        <button class="suggestion" onclick="useSuggestion('Research renewable energy.')">Research a topic</button>
+        <button class="suggestion" onclick="useSuggestion('Give me five creative technology ideas.')">Explore ideas</button>
+      </div>
+    </div>`;
+
+        clearAttachment();
+        saveChat();
+        closeSidebar();
+        renderHistory();
+      }
+
+      function saveChat() {
+        if (!currentChat) return;
+
+        const first = conversation.find((m) => m.role === "user");
+
+        const title = first
+          ? first.content.replace(/\s+/g, " ").slice(0, 42)
+          : "New Chat";
+
+        const old = chats.find((c) => c.id === currentChat);
+
+        if (old) {
+          old.messages = conversation;
+          old.title = title;
+          old.updated = Date.now();
+        } else {
+          chats.unshift({
+            id: currentChat,
+            title,
+            messages: conversation,
+            updated: Date.now(),
+          });
+        }
+
+        chats = chats.slice(0, 50);
+        store("j_chats", chats);
+        renderHistory();
+      }
+
+      function renderHistory() {
+        const el = document.getElementById("history");
+        el.innerHTML = "";
+
+        if (!chats.length) {
+          const empty = document.createElement("div");
+          empty.className = "history-empty";
+          empty.textContent = "Your conversations will appear here.";
+          el.append(empty);
+          return;
+        }
+
+        chats.forEach((chat) => {
+          const item = document.createElement("div");
+
+          item.className =
+            "history-item" + (chat.id === currentChat ? " active" : "");
+
+          const open = document.createElement("button");
+          open.className = "history-open";
+          open.textContent = chat.title || "New Chat";
+          open.title = chat.title || "New Chat";
+          open.onclick = () => loadChat(chat.id);
+
+          const del = document.createElement("button");
+          del.className = "history-delete";
+          del.textContent = "×";
+          del.title = "Delete conversation";
+
+          del.onclick = (event) => {
+            event.stopPropagation();
+            deleteChat(chat.id);
+          };
+
+          item.append(open, del);
+          el.append(item);
+        });
+      }
+
+      function deleteChat(id) {
+        const chat = chats.find((c) => c.id === id);
+        if (!chat) return;
+
+        const confirmed = confirm(
+          'Delete "' +
+            (chat.title || "New Chat") +
+            '"?\n\nThis conversation will be permanently deleted.',
+        );
+
+        if (!confirmed) return;
+
+        if (id === currentChat && generating && aborter) {
+          aborter.abort();
+        }
+
+        chats = chats.filter((c) => c.id !== id);
+        store("j_chats", chats);
+
+        if (id === currentChat) {
+          currentChat = null;
+          conversation = [];
+          newChat();
+        } else {
+          renderHistory();
+        }
+
+        toast("Conversation deleted");
+      }
+
+      function loadChat(id) {
+        const chat = chats.find((c) => c.id === id);
+        if (!chat) return;
+
+        if (generating && aborter) aborter.abort();
+        generating = false;
+
+        currentChat = id;
+        conversation = Array.isArray(chat.messages)
+          ? chat.messages.slice()
+          : [];
+
+        document.getElementById("chatContent").innerHTML = "";
+
+        if (!conversation.length) {
+          document.getElementById("chatContent").innerHTML = `
+      <div class="welcome" id="welcome">
+        <div class="core"><i class="fa-solid fa-atom"></i></div>
+        <h1>Welcome to <span>J.A.R.V.I.S.</span></h1>
+        <p>Your personal AI workspace.</p>
+      </div>`;
+        } else {
+          conversation.forEach((m) => addMessage(m.role, m.content));
+        }
+
+        renderHistory();
+        closeSidebar();
+      }
+
+      /* FILE ATTACHMENTS */
+
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", async (e) => {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          if (file.size > 5 * 1024 * 1024) {
+            toast("Maximum file size is 5 MB.");
+            e.target.value = "";
+            return;
+          }
+
+          try {
+            let text = "";
+            const ext = file.name.split(".").pop().toLowerCase();
+
+            if (ext === "pdf") {
+              if (!window.pdfjsLib) throw new Error("PDF reader did not load.");
+
+              pdfjsLib.GlobalWorkerOptions.workerSrc =
+                "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+              const pdf = await pdfjsLib.getDocument({
+                data: await file.arrayBuffer(),
+              }).promise;
+
+              for (let p = 1; p <= Math.min(pdf.numPages, 30); p++) {
+                const page = await pdf.getPage(p);
+                const content = await page.getTextContent();
+                text += content.items.map((i) => i.str).join(" ") + "\n";
+              }
+            } else if (ext === "docx") {
+              if (!window.mammoth) throw new Error("DOCX reader did not load.");
+
+              const result = await mammoth.extractRawText({
+                arrayBuffer: await file.arrayBuffer(),
+              });
+
+              text = result.value;
+            } else {
+              text = await file.text();
+            }
+
+            if (!text.trim()) throw new Error("No readable text found.");
+
+            attached = {
+              name: file.name,
+              text: text.slice(0, 50000),
+            };
+
+            const preview = document.getElementById("filePreview");
+            preview.style.display = "block";
+            preview.textContent =
+              "Attached: " + file.name + " • " + text.length + " characters";
+
+            toast("File ready to use");
+          } catch (error) {
+            toast(error.message || "Could not read file");
+          }
+
+          e.target.value = "";
+        });
+
+      function clearAttachment() {
+        attached = null;
+        document.getElementById("filePreview").style.display = "none";
+        document.getElementById("filePreview").textContent = "";
+      }
+
+      /* VOICE INPUT */
+
+      function getRecognitionClass() {
+        return window.SpeechRecognition || window.webkitSpeechRecognition;
+      }
+
+      function startVoice() {
+        const SR = getRecognitionClass();
+
+        if (!SR) {
+          toast("Speech recognition is not supported. Use Chrome.");
+          return;
+        }
+
+        if (recognition) {
+          try {
+            recognition.stop();
+          } catch {}
+        }
+
+        recognition = new SR();
+        recognition.lang = document.getElementById("voiceLanguage").value;
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+          setStatus("Listening...");
+        };
+
+        recognition.onresult = (e) => {
+          const text = e.results[0][0].transcript;
+          document.getElementById("prompt").value = text;
+          resizeInput(document.getElementById("prompt"));
+          handleVoiceCommand(text);
+        };
+
+        recognition.onerror = (e) => {
+          toast("Microphone issue: " + e.error);
+        };
+
+        recognition.onend = () => {
+          recognition = null;
+          setStatus("Ready");
+        };
+
+        try {
+          recognition.start();
+        } catch {
+          toast("Could not start microphone.");
+        }
+      }
+
+      function handleVoiceCommand(text) {
+        const t = text.toLowerCase().trim();
+        const sites = {
+          "open google": "https://google.com",
+          "open youtube": "https://youtube.com",
+          "open gmail": "https://gmail.com",
+          "open github": "https://github.com",
+          "open portfolio": "https://madhurk-portfolio.netlify.app/",
+          "open google drive": "https://drive.google.com",
+          "open wikipedia": "https://wikipedia.org",
+          "open chatgpt": "https://chatgpt.com",
+          "open wikipedia": "https://wikipedia.org",
+        };
+        for (const phrase in sites)
+          if (t.includes(phrase)) {
+            openSite(sites[phrase]);
+            document.getElementById("prompt").value = "";
+            return;
+          }
+        if (t.startsWith("search for ") || t.startsWith("search ")) {
+          const q = t.replace(/^search(?: for)?\s+/, "");
+          window.open(
+            "https://www.google.com/search?q=" + encodeURIComponent(q),
+            "_blank",
+            "noopener",
+          );
+          document.getElementById("prompt").value = "";
+          return;
+        }
+        if (t.includes("new chat")) {
+          newChat();
+          return;
+        }
+        if (t.includes("stop speaking") || t === "stop") {
+          stopVoice();
+          return;
+        }
+        if (t.includes("open coding studio")) {
+          openCodeStudio();
+          return;
+        }
+        if (t.includes("open control center") || t.includes("pc control")) {
+          openControlCenter();
+          return;
+        }
+        if (t.includes("open settings")) {
+          openSettings();
+          return;
+        }
+        if (t.includes("fullscreen")) {
+          toggleFullscreen();
+          return;
+        }
+        if (t.includes("play video")) {
+          mediaAction("play");
+          return;
+        }
+        if (t.includes("pause video")) {
+          mediaAction("pause");
+          return;
+        }
+        if (t.startsWith("remember that ")) {
+          document.getElementById("prompt").value = text;
+          sendMessage();
+          return;
+        }
+        sendMessage();
+      }
+
+      let wakeListening = false;
+      function toggleWakeWord() {
+        if (wakeListening) {
+          wakeListening = false;
+          if (recognition) {
+            try {
+              recognition.stop();
+            } catch {}
+          }
+          document.getElementById("wakeBtn")?.classList.remove("active");
+          toast("Hands-free mode off");
+          return;
+        }
+        const SR = getRecognitionClass();
+        if (!SR) {
+          toast("Hands-free voice is not supported in this browser.");
+          return;
+        }
+        wakeListening = true;
+        const listen = () => {
+          if (!wakeListening) return;
+          try {
+            recognition = new SR();
+            recognition.lang = document.getElementById("voiceLanguage").value;
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.onresult = (e) => {
+              for (let i = e.resultIndex; i < e.results.length; i++) {
+                if (!e.results[i].isFinal) continue;
+                const phrase = e.results[i][0].transcript.trim();
+                if (/hey J.A.R.V.I.S.|hello J.A.R.V.I.S./i.test(phrase)) {
+                  const command = phrase
+                    .replace(/hey J.A.R.V.I.S.|hello J.A.R.V.I.S./gi, "")
+                    .trim();
+                  if (command) {
+                    const vout = document.getElementById("j88VoiceOutput");
+                    if (vout) vout.textContent = "Heard: " + command;
+                    handleVoiceCommand(command);
+                  } else speak("I am listening.");
+                }
+              }
+            };
+            recognition.onerror = () => {};
+            recognition.onend = () => {
+              recognition = null;
+              if (wakeListening) setTimeout(listen, 350);
+            };
+            recognition.start();
+          } catch {
+            recognition = null;
+            if (wakeListening) setTimeout(listen, 700);
+          }
+        };
+        document.getElementById("wakeBtn")?.classList.add("active");
+        listen();
+        const vout = document.getElementById("j88VoiceOutput");
+        if (vout)
+          vout.textContent =
+            "Hands-free mode active. Say Hey J.A.R.V.I.S. followed by a command.";
+        toast("Hands-free mode on. Say Hey J.A.R.V.I.S..");
+      }
+
+      /* TEXT TO SPEECH */
+
+      function loadVoices() {
+        if (!("speechSynthesis" in window)) return;
+
+        const select = document.getElementById("voiceSelect");
+        const voices = speechSynthesis.getVoices();
+
+        select.innerHTML = "";
+
+        voices.forEach((v, i) => {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = v.name + " (" + v.lang + ")";
+          select.append(option);
+        });
+        if (voices.length && !select.dataset.userChosen) {
+          const preferred = voices.findIndex(
+            (v) =>
+              /en-GB/i.test(v.lang) &&
+              /male|daniel|george|oliver|ryan/i.test(v.name),
+          );
+          const fallback = voices.findIndex((v) => /en-GB/i.test(v.lang));
+          select.value = String(
+            preferred >= 0 ? preferred : fallback >= 0 ? fallback : 0,
+          );
+        }
+        select.onchange = () => {
+          select.dataset.userChosen = "1";
+        };
+      }
+
+      if ("speechSynthesis" in window) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+      }
+
+      function speak(text) {
+        if (!("speechSynthesis" in window)) {
+          toast("Speech output is unavailable.");
+          return;
+        }
+
+        speechSynthesis.cancel();
+
+        const clean = String(text)
+          .replace(/```[\s\S]*?```/g, " Code block omitted. ")
+          .replace(/https?:\/\/\S+/g, "link")
+          .replace(/[#*_`]/g, "")
+          .slice(0, 10000);
+
+        const utterance = new SpeechSynthesisUtterance(clean);
+        const voices = speechSynthesis.getVoices();
+        const chosen = Number(document.getElementById("voiceSelect").value);
+        const selectedVoice = voices[chosen];
+        const preferred =
+          voices.find(
+            (v) =>
+              /en-GB/i.test(v.lang) &&
+              /male|daniel|george|oliver|ryan/i.test(v.name),
+          ) ||
+          voices.find(
+            (v) => /en-US/i.test(v.lang) && /male|david|guy|mark/i.test(v.name),
+          ) ||
+          voices.find((v) => /en-GB/i.test(v.lang)) ||
+          voices.find((v) => /en-US/i.test(v.lang));
+        if (selectedVoice) utterance.voice = selectedVoice;
+        else if (preferred) utterance.voice = preferred;
+        utterance.pitch = 0.88;
+
+        utterance.rate =
+          Number(document.getElementById("voiceRate").value) || 1;
+
+        utterance.onstart = () => {
+          voiceBusy = true;
+          document.querySelector(".welcome .core")?.classList.add("speaking");
+        };
+
+        utterance.onend = () => {
+          voiceBusy = false;
+          document
+            .querySelector(".welcome .core")
+            ?.classList.remove("speaking");
+        };
+
+        utterance.onerror = () => {
+          voiceBusy = false;
+        };
+
+        speechSynthesis.speak(utterance);
+      }
+
+      function stopVoice() {
+        if ("speechSynthesis" in window) speechSynthesis.cancel();
+        voiceBusy = false;
+        document.querySelector(".welcome .core")?.classList.remove("speaking");
+      }
+
+      /* UTILITIES */
+
+      async function copyText(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          toast("Copied");
+        } catch {
+          toast("Clipboard permission unavailable");
+        }
+      }
+
+      function showCreator() {
+        const text =
+          "J.A.R.V.I.S.\n" +
+          "Created by Madhur Kamalakar Khedkar.\n\n" +
+          "Portfolio: https://madhurk-portfolio.netlify.app/\n" +
+          "GitHub: https://github.com/Madhur-khedkar01";
+
+        addMessage("assistant", text);
+        closeSidebar();
+      }
+
+      /* MARK 76 WORKSPACE TOOLS */
+      function openUtility(id) {
+        document.getElementById(id).classList.add("show");
+        closeSidebar();
+      }
+      function closeUtility(id) {
+        document.getElementById(id).classList.remove("show");
+      }
+      function openCodeStudio() {
+        openUtility("codeModal");
+        const saved = localStorage.getItem("j_code");
+        if (saved && !document.getElementById("codeEditor").value)
+          document.getElementById("codeEditor").value = saved;
+      }
+      function runCode() {
+        const lang = document.getElementById("codeLanguage").value;
+        const code = document.getElementById("codeEditor").value;
+        const frame = document.getElementById("codePreview");
+        if (lang === "python") {
+          frame.srcdoc =
+            "<body style='font:14px Arial;padding:20px'><h3>Python preview</h3><p>Python cannot run in this browser-only editor. Download the .py file or connect a Python backend.</p></body>";
+          toast("Python needs a runtime to execute.");
+          return;
+        }
+        let html = code;
+        if (lang === "javascript")
+          html =
+            "<!doctype html><html><body><pre id='out'></pre><script>const log=(...x)=>document.getElementById('out').textContent+=x.join(' ')+'\n';console.log=log;\n" +
+            code.replace(/<\/script/gi, "<\\/script") +
+            "\n<\/script></body></html>";
+        if (lang === "css")
+          html =
+            "<!doctype html><html><head><style>" +
+            code +
+            "</style></head><body><h1>CSS Preview</h1><p>Edit CSS to see the result.</p><button>Sample button</button></body></html>";
+        frame.srcdoc = html;
+        toast("Preview updated.");
+      }
+      function saveCode() {
+        localStorage.setItem(
+          "j_code",
+          document.getElementById("codeEditor").value,
+        );
+        toast("Code saved in this browser.");
+      }
+      function downloadCode() {
+        const lang = document.getElementById("codeLanguage").value;
+        const ext = {
+          html: "html",
+          javascript: "js",
+          css: "css",
+          python: "py",
+        }[lang];
+        const blob = new Blob([document.getElementById("codeEditor").value], {
+          type: "text/plain",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "J.A.R.V.I.S.-project." + ext;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+      function openSite(url) {
+        const w = window.open(url, "_blank", "noopener,noreferrer");
+        if (!w) toast("Popup blocked. Allow popups for this page.");
+      }
+      function openControlCenter() {
+        openUtility("controlModal");
+      }
+      function toggleFullscreen() {
+        if (!document.fullscreenElement)
+          document.documentElement
+            .requestFullscreen?.()
+            .catch(() => toast("Fullscreen permission unavailable."));
+        else document.exitFullscreen?.();
+      }
+      function mediaAction(action) {
+        const media = [...document.querySelectorAll("video,audio")];
+        if (!media.length) {
+          toast(
+            "No media player found in this J.A.R.V.I.S. tab. Use the media controls on the website tab.",
+          );
+          return;
+        }
+        media.forEach((m) =>
+          action === "play" ? m.play().catch(() => {}) : m.pause(),
+        );
+      }
+      function runPCCommand() {
+        const input = document.getElementById("pcCommand");
+        const cmd = input.value.trim();
+        if (!cmd) return;
+        const t = cmd.toLowerCase();
+        if (t.startsWith("open ")) {
+          let target = t.slice(5).trim();
+          const map = {
+            google: "https://google.com",
+            youtube: "https://youtube.com",
+            gmail: "https://gmail.com",
+            github: "https://github.com",
+            drive: "https://drive.google.com",
+            wikipedia: "https://wikipedia.org",
+          };
+          if (map[target]) openSite(map[target]);
+          else {
+            let url;
+            try {
+              url = new URL(
+                target.includes("://") ? target : "https://" + target,
+              );
+              if (!["http:", "https:"].includes(url.protocol)) throw 0;
+              openSite(url.href);
+            } catch {
+              toast("Enter a valid website name or URL.");
+            }
+          }
+        } else if (t.startsWith("search ")) {
+          openSite(
+            "https://www.google.com/search?q=" +
+              encodeURIComponent(cmd.slice(7)),
+          );
+        } else if (t === "new chat") {
+          newChat();
+          closeUtility("controlModal");
+        } else if (t === "fullscreen") {
+          toggleFullscreen();
+        } else if (t === "coding studio") {
+          openCodeStudio();
+        } else {
+          document.getElementById("prompt").value = cmd;
+          closeUtility("controlModal");
+          sendMessage();
+        }
+        input.value = "";
+      }
+      function researchSearch() {
+        const input = document.getElementById("prompt");
+        const topic = input.value.trim();
+        if (!topic) {
+          toast("Type a research topic in the chat box first.");
+          input.focus();
+          return;
+        }
+        window.open(
+          "https://www.google.com/search?q=" + encodeURIComponent(topic),
+          "_blank",
+          "noopener",
+        );
+        document.getElementById("modeSelect").value = "research";
+        input.value =
+          "Research this topic: " +
+          topic +
+          ". Help me organise the findings, identify reliable sources, and separate verified facts from uncertainty. Do not invent citations. I will provide source text or links for detailed source analysis.";
+        resizeInput(input);
+        toast("Search results opened in a new tab.");
+      }
+      function openMemory() {
+        document.getElementById("memoryEditor").value = readStore(
+          "j_memory",
+          "",
+        );
+        openUtility("memoryModal");
+      }
+      function saveMemory() {
+        store("j_memory", document.getElementById("memoryEditor").value.trim());
+        toast("Smart Memory saved.");
+      }
+      function clearMemory() {
+        if (!confirm("Clear all J.A.R.V.I.S. memory saved in this browser?"))
+          return;
+        store("j_memory", "");
+        document.getElementById("memoryEditor").value = "";
+        toast("Memory cleared.");
+      }
+      async function compareModels() {
+        if (generating) {
+          toast("Wait for the current reply to finish.");
+          return;
+        }
+        const prompt = document.getElementById("prompt").value.trim();
+        if (!prompt) {
+          toast("Type a question first, then tap Compare.");
+          return;
+        }
+        if (!settings.key) {
+          openSettings();
+          return;
+        }
+        const compare = [settings.model, "google/gemini-2.5-flash"].filter(
+          (v, i, a) => a.indexOf(v) === i,
+        );
+        if (compare.length < 2) {
+          toast("Choose a different model to compare.");
+          return;
+        }
+        const btnText = "Comparing models...";
+        setStatus(btnText);
+        const userText = prompt;
+        document.getElementById("prompt").value = "";
+        removeWelcome();
+        addMessage("user", "Compare models: " + userText);
+        const jobs = compare.map(async (model) => {
+          const r = await fetchWithRateRetry(API + "/chat/completions", {
+            method: "POST",
+            headers: headers(),
+            cache: "no-store",
+            body: JSON.stringify({
+              model,
+              messages: [
+                {
+                  role: "system",
+                  content: SYSTEM_BASE + " Give a concise, accurate answer.",
+                },
+                { role: "user", content: userText },
+              ],
+              temperature: 0.4,
+              max_tokens: 700,
+            }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(apiError(r.status, d));
+          return (
+            "MODEL: " +
+            model +
+            "\n" +
+            (d.choices?.[0]?.message?.content || "No answer")
+          );
+        });
+        try {
+          const results = await Promise.allSettled(jobs);
+          results.forEach((r, i) =>
+            addMessage(
+              "assistant",
+              r.status === "fulfilled"
+                ? r.value
+                : "MODEL: " + compare[i] + "\nError: " + r.reason.message,
+            ),
+          );
+        } finally {
+          setStatus("Ready");
+        }
+      }
+
+      /* J.A.R.V.I.S. FEATURES */
+      let m77AgentController = null;
+      let m77ReaderText = "";
+      let m77CSV = null;
+      let m77CSVSummary = "";
+      let m77Bridge = localStorage.getItem("j77_bridge") || "";
+      const m77Get = (key, fallback = []) => readStore("j77_" + key, fallback);
+      const m77Set = (key, value) => store("j77_" + key, value);
+      const m77Escape = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      function openMark77() {
+        document.getElementById("mark77Modal").classList.add("show");
+        m77Init();
+      }
+      function closeMark77() {
+        document.getElementById("mark77Modal").classList.remove("show");
+      }
+      function m77Show(id) {
+        document
+          .querySelectorAll(".m77-section")
+          .forEach((x) => x.classList.remove("active"));
+        const el = document.getElementById("m77-" + id);
+        if (el) el.classList.add("active");
+        if (id === "memory") m77RenderMemory();
+        if (id === "library") m77RenderLibrary();
+        if (id === "planner") m77RenderTasks();
+        if (id === "automation") m77RenderMacros();
+        if (id === "persona") m77LoadPersona();
+      }
+      function m77Init() {
+        const selects = ["m77ModelA", "m77ModelB", "m77ModelC"].map((id) =>
+          document.getElementById(id),
+        );
+        const ids = models.length ? models.map((x) => x.id) : FALLBACK_MODELS;
+        selects.forEach((sel, i) => {
+          if (!sel) return;
+          const prior = sel.value;
+          sel.innerHTML = "";
+          ids.forEach((id) => {
+            const o = document.createElement("option");
+            o.value = id;
+            o.textContent = id;
+            sel.append(o);
+          });
+          sel.value =
+            prior && ids.includes(prior)
+              ? prior
+              : i === 0
+                ? settings.model
+                : ids[Math.min(i, ids.length - 1)];
+        });
+        document.getElementById("m77BridgeUrl").value = m77Bridge;
+        document.getElementById("m77VoiceLanguage").value =
+          document.getElementById("voiceLanguage").value;
+      }
+      function m77PersonaPrompt() {
+        const p = m77Get("persona", { type: "default" });
+        const presets = {
+          default: "Be balanced, helpful and clear.",
+          tutor:
+            "Teach patiently using simple language, examples and short steps.",
+          coder:
+            "Act as a careful senior developer. Explain assumptions, edge cases and complete working solutions.",
+          researcher:
+            "Be evidence-focused. Separate verified facts from uncertainty and never invent citations.",
+          concise: "Prefer short, direct answers and avoid unnecessary detail.",
+        };
+        return (
+          "\nPersonality style: " +
+          (p.type === "custom"
+            ? p.text || presets.default
+            : presets[p.type] || presets.default)
+        );
+      }
+      async function m77Call(model, messages, extra = {}) {
+        if (!settings.key)
+          throw new Error("Add your OpenRouter API key in Settings first.");
+        const res = await fetch(API + "/chat/completions", {
+          method: "POST",
+          headers: headers(),
+          signal: extra.signal,
+          body: JSON.stringify({
+            model,
+            messages,
+            temperature: settings.temperature,
+            max_tokens: extra.max_tokens || settings.maxTokens,
+            ...(extra.body || {}),
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(apiError(res.status, data));
+        return data.choices?.[0]?.message?.content || "No response returned.";
+      }
+      async function m77MultiRun() {
+        const prompt = document.getElementById("m77MultiPrompt").value.trim();
+        if (!prompt) return toast("Enter a question first.");
+        const ids = ["m77ModelA", "m77ModelB", "m77ModelC"]
+          .map((id) => document.getElementById(id).value)
+          .filter((v, i, a) => v && a.indexOf(v) === i);
+        const out = document.getElementById("m77MultiOutput");
+        out.textContent = "Running " + ids.length + " models in parallel...";
+        const results = await Promise.allSettled(
+          ids.map((model) =>
+            m77Call(
+              model,
+              [
+                {
+                  role: "system",
+                  content:
+                    SYSTEM_BASE +
+                    " Answer independently. Be accurate and concise.",
+                },
+                { role: "user", content: prompt },
+              ],
+              { max_tokens: 1000 },
+            ),
+          ),
+        );
+        out.textContent = results
+          .map(
+            (r, i) =>
+              "MODEL: " +
+              ids[i] +
+              "\n" +
+              (r.status === "fulfilled"
+                ? r.value
+                : "Error: " + r.reason.message),
+          )
+          .join("\n\n" + "─".repeat(35) + "\n\n");
+      }
+      function m77SendToChat(id) {
+        const value = document.getElementById(id)?.textContent || "";
+        if (!value || /will appear here|idle\./i.test(value))
+          return toast("There is no result to send yet.");
+        closeMark77();
+        document.getElementById("prompt").value =
+          "Please review this result:\n\n" + value;
+        resizeInput(document.getElementById("prompt"));
+      }
+      async function m77RunAgent() {
+        const goal = document.getElementById("m77AgentGoal").value.trim();
+        if (!goal) return toast("Describe the goal first.");
+        if (!settings.key) return openSettings();
+        const out = document.getElementById("m77AgentOutput"),
+          bar = document.getElementById("m77AgentBar");
+        m77AgentController = new AbortController();
+        out.textContent = "Creating a plan...";
+        bar.style.width = "5%";
+        try {
+          const plan = await m77Call(
+            settings.model,
+            [
+              {
+                role: "system",
+                content:
+                  "Create a practical plan of 3 to 5 numbered steps for the user's goal. Return only the numbered steps, each one short. Do not claim to perform external actions.",
+              },
+              { role: "user", content: goal },
+            ],
+            { signal: m77AgentController.signal, max_tokens: 500 },
+          );
+          const steps = plan
+            .split(/\n+/)
+            .map((x) => x.replace(/^\s*(?:\d+[.)]|[-*])\s*/, "").trim())
+            .filter(Boolean)
+            .slice(0, 5);
+          if (!steps.length) throw new Error("Could not create a usable plan.");
+          out.textContent =
+            "GOAL: " +
+            goal +
+            "\n\nPLAN:\n" +
+            steps.map((x, i) => i + 1 + ". " + x).join("\n");
+          for (let i = 0; i < steps.length; i++) {
+            if (m77AgentController.signal.aborted)
+              throw new Error("Agent stopped by user.");
+            out.textContent +=
+              "\n\nSTEP " + (i + 1) + " / " + steps.length + "\nWorking...";
+            bar.style.width = Math.round((i / steps.length) * 100) + "%";
+            const result = await m77Call(
+              settings.model,
+              [
+                {
+                  role: "system",
+                  content:
+                    "You are executing one planning step intellectually. Provide a useful deliverable for this step. Do not claim to have accessed websites, files or apps unless their content is supplied.",
+                },
+                {
+                  role: "user",
+                  content:
+                    "Overall goal: " +
+                    goal +
+                    "\nCurrent step: " +
+                    steps[i] +
+                    "\nPrevious work:\n" +
+                    out.textContent.slice(-4500),
+                },
+              ],
+              { signal: m77AgentController.signal, max_tokens: 1100 },
+            );
+            out.textContent += "\n" + result;
+          }
+          bar.style.width = "100%";
+          out.textContent +=
+            "\n\nAgent run complete. Review the output before using it.";
+        } catch (e) {
+          out.textContent += "\n\n" + e.message;
+        } finally {
+          m77AgentController = null;
+        }
+      }
+      function m77StopAgent() {
+        if (m77AgentController) m77AgentController.abort();
+      }
+      async function m77Research() {
+        const topic = document.getElementById("m77ResearchTopic").value.trim();
+        if (!topic) return toast("Enter a research topic.");
+        if (!settings.key) return openSettings();
+        const out = document.getElementById("m77ResearchOutput");
+        out.textContent = "Searching with online model routing...";
+        try {
+          const answer = await m77Call(
+            settings.model + ":online",
+            [
+              {
+                role: "system",
+                content:
+                  "Research carefully using web search if available. Provide concise findings, dates where relevant, and clickable source URLs returned by the search provider. Clearly say if online search was unavailable. Never invent sources.",
+              },
+              {
+                role: "user",
+                content:
+                  "Research this topic: " +
+                  topic +
+                  ". Include key facts, current context, and source links.",
+              },
+            ],
+            { max_tokens: 1800 },
+          );
+          out.textContent = answer;
+        } catch (e) {
+          out.textContent =
+            "Online model search did not work: " +
+            e.message +
+            "\n\nYou can still open a normal web search using the button. Paste source text or links into chat for analysis.";
+        }
+      }
+      function m77OpenSearch() {
+        const q = document.getElementById("m77ResearchTopic").value.trim();
+        if (!q) return toast("Enter a research topic.");
+        window.open(
+          "https://www.google.com/search?q=" + encodeURIComponent(q),
+          "_blank",
+          "noopener,noreferrer",
+        );
+      }
+      function m77AddMemory() {
+        const v = document.getElementById("m77MemoryAdd").value.trim();
+        if (!v) return;
+        const arr = m77Get("memoryNotes", []);
+        arr.unshift({
+          id: Date.now(),
+          text: v,
+          created: new Date().toISOString(),
+        });
+        m77Set("memoryNotes", arr.slice(0, 200));
+        const old = readStore("j_memory", "");
+        store("j_memory", (old ? old + "\n" : "") + "• " + v);
+        document.getElementById("m77MemoryAdd").value = "";
+        m77RenderMemory();
+        toast("Memory note saved.");
+      }
+      function m77RenderMemory() {
+        const q = (
+          document.getElementById("m77MemorySearch")?.value || ""
+        ).toLowerCase();
+        const arr = m77Get("memoryNotes", []).filter((x) =>
+          x.text.toLowerCase().includes(q),
+        );
+        const el = document.getElementById("m77MemoryList");
+        if (!el) return;
+        el.innerHTML = arr.length ? "" : "<p>No matching saved notes.</p>";
+        arr.forEach((x) => {
+          const d = document.createElement("div");
+          d.className = "m77-item";
+          const sp = document.createElement("span");
+          sp.textContent = x.text;
+          const b = document.createElement("button");
+          b.textContent = "Delete";
+          b.onclick = () => {
+            m77Set(
+              "memoryNotes",
+              m77Get("memoryNotes", []).filter((y) => y.id !== x.id),
+            );
+            m77RenderMemory();
+          };
+          d.append(sp, b);
+          el.append(d);
+        });
+      }
+      async function m77ReadDocument() {
+        const f = document.getElementById("m77ReaderFile").files[0];
+        if (!f) return toast("Choose a document.");
+        if (f.size > 20 * 1024 * 1024)
+          return toast("Maximum document size is 20 MB.");
+        const out = document.getElementById("m77ReaderOutput");
+        out.textContent = "Reading " + f.name + "...";
+        try {
+          const ext = f.name.split(".").pop().toLowerCase();
+          let t = "";
+          if (ext === "pdf") {
+            if (!window.pdfjsLib)
+              throw Error("PDF reader library did not load.");
+            const pdf = await pdfjsLib.getDocument({
+              data: await f.arrayBuffer(),
+            }).promise;
+            for (let p = 1; p <= Math.min(pdf.numPages, 80); p++) {
+              const page = await pdf.getPage(p);
+              const c = await page.getTextContent();
+              t += "\n[Page " + p + "]\n" + c.items.map((x) => x.str).join(" ");
+            }
+          } else if (ext === "docx") {
+            if (!window.mammoth)
+              throw Error("DOCX reader library did not load.");
+            const r = await mammoth.extractRawText({
+              arrayBuffer: await f.arrayBuffer(),
+            });
+            t = r.value;
+          } else t = await f.text();
+          m77ReaderText = t.slice(0, 250000);
+          out.textContent =
+            "FILE: " +
+            f.name +
+            "\nSIZE: " +
+            f.size +
+            " bytes\n\n" +
+            m77ReaderText +
+            (t.length > 250000
+              ? "\n\n[Text truncated at 250,000 characters.]"
+              : "");
+        } catch (e) {
+          out.textContent = "Could not read file: " + e.message;
+        }
+      }
+      function m77ReaderToChat() {
+        if (!m77ReaderText) return toast("Read a document first.");
+        closeMark77();
+        document.getElementById("prompt").value =
+          "Please analyse this document. Summarise its main points and answer questions using only the supplied text.\n\n" +
+          m77ReaderText.slice(0, 60000);
+        resizeInput(document.getElementById("prompt"));
+      }
+      function m77SaveReaderToLibrary() {
+        if (!m77ReaderText) return toast("Read a document first.");
+        m77Set("library", [
+          {
+            id: Date.now(),
+            title:
+              document.getElementById("m77ReaderFile").files[0]?.name ||
+              "Imported document",
+            body: m77ReaderText,
+            created: new Date().toISOString(),
+          },
+          ...m77Get("library", []),
+        ]);
+        toast("Document saved to Knowledge Library.");
+      }
+      function m77SaveBridge() {
+        m77Bridge = document
+          .getElementById("m77BridgeUrl")
+          .value.trim()
+          .replace(/\/$/, "");
+        localStorage.setItem("j77_bridge", m77Bridge);
+        toast("Bridge address saved.");
+      }
+      async function m77TestBridge() {
+        m77SaveBridge();
+        const out = document.getElementById("m77PCOutput");
+        if (!m77Bridge) {
+          out.textContent = "No bridge address configured.";
+          return;
+        }
+        try {
+          const r = await fetch(m77Bridge + "/health", { method: "GET" });
+          out.textContent =
+            "Bridge response: HTTP " +
+            r.status +
+            "\n" +
+            (await r.text()).slice(0, 1000);
+        } catch (e) {
+          out.textContent =
+            "Bridge not reachable: " +
+            e.message +
+            "\nCheck that your own local companion is running and permits this page's origin.";
+        }
+      }
+      async function m77ReviewCode() {
+        const code = document.getElementById("codeEditor").value;
+        if (!code.trim())
+          return toast("Open Coding Studio and add code first.");
+        if (!settings.key) return openSettings();
+        const out = document.getElementById("m77CodingOutput");
+        out.textContent = "Reviewing code...";
+        try {
+          out.textContent = await m77Call(
+            settings.model,
+            [
+              {
+                role: "system",
+                content:
+                  "Review code for bugs, security issues, correctness and improvements. Be specific. Do not claim to run it.",
+              },
+              {
+                role: "user",
+                content:
+                  "Language: " +
+                  document.getElementById("codeLanguage").value +
+                  "\n\n" +
+                  code,
+              },
+            ],
+            { max_tokens: 1800 },
+          );
+        } catch (e) {
+          out.textContent = e.message;
+        }
+      }
+      async function m77ExplainCode() {
+        const code = document.getElementById("codeEditor").value;
+        if (!code.trim())
+          return toast("Open Coding Studio and add code first.");
+        if (!settings.key) return openSettings();
+        const out = document.getElementById("m77CodingOutput");
+        out.textContent = "Explaining code...";
+        try {
+          out.textContent = await m77Call(
+            settings.model,
+            [
+              {
+                role: "system",
+                content:
+                  "Explain the supplied code in clear steps. Do not assume it has been executed.",
+              },
+              {
+                role: "user",
+                content:
+                  "Language: " +
+                  document.getElementById("codeLanguage").value +
+                  "\n\n" +
+                  code,
+              },
+            ],
+            { max_tokens: 1800 },
+          );
+        } catch (e) {
+          out.textContent = e.message;
+        }
+      }
+      function m77ParseCSV(text) {
+        const rows = [];
+        let row = [],
+          cell = "",
+          quoted = false;
+        for (let i = 0; i < text.length; i++) {
+          const c = text[i];
+          if (c === '"' && quoted && text[i + 1] === '"') {
+            cell += '"';
+            i++;
+          } else if (c === '"') quoted = !quoted;
+          else if (c === "," && !quoted) {
+            row.push(cell);
+            cell = "";
+          } else if ((c === "\n" || c === "\r") && !quoted) {
+            if (c === "\r" && text[i + 1] === "\n") i++;
+            row.push(cell);
+            if (row.some((x) => x !== "")) rows.push(row);
+            row = [];
+            cell = "";
+          } else cell += c;
+        }
+        row.push(cell);
+        if (row.some((x) => x !== "")) rows.push(row);
+        return rows;
+      }
+      async function m77AnalyzeCSV() {
+        const f = document.getElementById("m77CSVFile").files[0];
+        if (!f) return toast("Choose a CSV file.");
+        if (f.size > 15 * 1024 * 1024) return toast("CSV limit is 15 MB.");
+        const text = await f.text();
+        const rows = m77ParseCSV(text);
+        if (rows.length < 2)
+          return toast("CSV needs a header and at least one data row.");
+        const headers = rows[0].map((x, i) => x || "Column " + (i + 1));
+        const data = rows.slice(1);
+        const stats = headers.map((h, i) => {
+          const vals = data.map((r) => r[i] ?? "");
+          const nums = vals
+            .map((v) => Number(String(v).trim()))
+            .filter((v) => String(v).trim() !== "" && Number.isFinite(v));
+          return {
+            name: h,
+            missing: vals.filter((v) => String(v).trim() === "").length,
+            numeric: nums.length,
+            mean: nums.length
+              ? nums.reduce((a, b) => a + b, 0) / nums.length
+              : null,
+            min: nums.length ? Math.min(...nums) : null,
+            max: nums.length ? Math.max(...nums) : null,
+          };
+        });
+        m77CSVSummary =
+          "File: " +
+          f.name +
+          "\nRows: " +
+          data.length +
+          "\nColumns: " +
+          headers.length +
+          "\n\n" +
+          stats
+            .map(
+              (x) =>
+                x.name +
+                " | missing: " +
+                x.missing +
+                " | numeric: " +
+                x.numeric +
+                (x.mean !== null
+                  ? " | mean: " +
+                    x.mean.toFixed(3) +
+                    " | min: " +
+                    x.min +
+                    " | max: " +
+                    x.max
+                  : ""),
+            )
+            .join("\n");
+        document.getElementById("m77DataOutput").textContent =
+          m77CSVSummary +
+          "\n\nPreview:\n" +
+          data
+            .slice(0, 5)
+            .map((r) => r.join(" | "))
+            .join("\n");
+        m77CSV = { headers, rows: data };
+      }
+      function m77ExportCSVSummary() {
+        if (!m77CSVSummary) return toast("Analyze a CSV first.");
+        m77Download("csv-analysis.txt", m77CSVSummary, "text/plain");
+      }
+      function m77AddLibrary() {
+        const title = document.getElementById("m77LibraryTitle").value.trim();
+        const body = document.getElementById("m77LibraryBody").value.trim();
+        if (!body) return toast("Add some content first.");
+        const a = m77Get("library", []);
+        a.unshift({
+          id: Date.now(),
+          title: title || "Untitled note",
+          body,
+          created: new Date().toISOString(),
+        });
+        m77Set("library", a.slice(0, 300));
+        document.getElementById("m77LibraryTitle").value = "";
+        document.getElementById("m77LibraryBody").value = "";
+        m77RenderLibrary();
+        toast("Saved to Knowledge Library.");
+      }
+      function m77RenderLibrary() {
+        const q = (
+          document.getElementById("m77LibrarySearch")?.value || ""
+        ).toLowerCase();
+        const el = document.getElementById("m77LibraryList");
+        if (!el) return;
+        const arr = m77Get("library", []).filter((x) =>
+          (x.title + " " + x.body).toLowerCase().includes(q),
+        );
+        el.innerHTML = "";
+        arr.forEach((x) => {
+          const d = document.createElement("div");
+          d.className = "m77-item";
+          const sp = document.createElement("span");
+          sp.textContent = x.title + " — " + x.body.slice(0, 100);
+          const open = document.createElement("button");
+          open.textContent = "Open";
+          open.onclick = () => {
+            document.getElementById("m77LibraryTitle").value = x.title;
+            document.getElementById("m77LibraryBody").value = x.body;
+          };
+          const del = document.createElement("button");
+          del.textContent = "Delete";
+          del.onclick = () => {
+            m77Set(
+              "library",
+              m77Get("library", []).filter((y) => y.id !== x.id),
+            );
+            m77RenderLibrary();
+          };
+          d.append(sp, open, del);
+          el.append(d);
+        });
+        if (!arr.length) el.textContent = "No saved knowledge yet.";
+      }
+      function m77AddTask() {
+        const name = document.getElementById("m77TaskName").value.trim();
+        if (!name) return toast("Enter a task name.");
+        const tasks = m77Get("tasks", []);
+        tasks.unshift({
+          id: Date.now(),
+          name,
+          due: document.getElementById("m77TaskDate").value,
+          done: false,
+        });
+        m77Set("tasks", tasks);
+        document.getElementById("m77TaskName").value = "";
+        m77RenderTasks();
+      }
+      function m77RenderTasks() {
+        const el = document.getElementById("m77TaskList");
+        if (!el) return;
+        const arr = m77Get("tasks", []);
+        el.innerHTML = "";
+        arr.forEach((x) => {
+          const d = document.createElement("div");
+          d.className = "m77-item";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = x.done;
+          cb.onchange = () => {
+            const a = m77Get("tasks", []);
+            const t = a.find((y) => y.id === x.id);
+            if (t) t.done = cb.checked;
+            m77Set("tasks", a);
+            m77RenderTasks();
+          };
+          const sp = document.createElement("span");
+          sp.textContent = x.name + (x.due ? " • Due " + x.due : "");
+          if (x.done) sp.style.textDecoration = "line-through";
+          const del = document.createElement("button");
+          del.textContent = "×";
+          del.onclick = () => {
+            m77Set(
+              "tasks",
+              m77Get("tasks", []).filter((y) => y.id !== x.id),
+            );
+            m77RenderTasks();
+          };
+          d.append(cb, sp, del);
+          el.append(d);
+        });
+        if (!arr.length) el.textContent = "No tasks yet.";
+      }
+      function m77ClearDone() {
+        m77Set(
+          "tasks",
+          m77Get("tasks", []).filter((x) => !x.done),
+        );
+        m77RenderTasks();
+      }
+      function m77SaveMacro() {
+        const name = document.getElementById("m77MacroName").value.trim();
+        const commands = document
+          .getElementById("m77MacroCommands")
+          .value.split(/\n/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+        if (!name || !commands.length)
+          return toast("Add a name and at least one command.");
+        const allowed =
+          /^(open (google|youtube|gmail|github|drive|wikipedia)|search .+|new chat|fullscreen|coding studio)$/i;
+        if (commands.some((x) => !allowed.test(x)))
+          return toast(
+            "One or more commands are not in the safe command list.",
+          );
+        const a = m77Get("macros", []);
+        a.unshift({ id: Date.now(), name, commands });
+        m77Set("macros", a);
+        m77RenderMacros();
+      }
+      function m77RenderMacros() {
+        const el = document.getElementById("m77MacroList");
+        if (!el) return;
+        el.innerHTML = "";
+        m77Get("macros", []).forEach((x) => {
+          const d = document.createElement("div");
+          d.className = "m77-item";
+          const sp = document.createElement("span");
+          sp.textContent = x.name + " • " + x.commands.length + " actions";
+          const run = document.createElement("button");
+          run.textContent = "Run";
+          run.onclick = () => m77RunMacro(x.id);
+          const del = document.createElement("button");
+          del.textContent = "Delete";
+          del.onclick = () => {
+            m77Set(
+              "macros",
+              m77Get("macros", []).filter((y) => y.id !== x.id),
+            );
+            m77RenderMacros();
+          };
+          d.append(sp, run, del);
+          el.append(d);
+        });
+        if (!el.children.length) el.textContent = "No saved automations.";
+      }
+      async function m77RunMacro(id) {
+        const macro = m77Get("macros", []).find((x) => x.id === id);
+        if (!macro) return;
+        for (const cmd of macro.commands) {
+          if (/^open /i.test(cmd)) {
+            const site = cmd.slice(5).toLowerCase();
+            const urls = {
+              google: "https://google.com",
+              youtube: "https://youtube.com",
+              gmail: "https://gmail.com",
+              github: "https://github.com",
+              drive: "https://drive.google.com",
+              wikipedia: "https://wikipedia.org",
+            };
+            openSite(urls[site]);
+          } else if (/^search /i.test(cmd))
+            openSite(
+              "https://www.google.com/search?q=" +
+                encodeURIComponent(cmd.slice(7)),
+            );
+          else if (cmd === "new chat") newChat();
+          else if (cmd === "fullscreen") toggleFullscreen();
+          else if (cmd === "coding studio") openCodeStudio();
+          await delay(350);
+        }
+        toast("Automation commands sent to the browser.");
+      }
+      function m77Download(name, content, type = "application/json") {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      function m77ExportChat() {
+        const chat = chats.find((x) => x.id === currentChat) || {
+          id: currentChat,
+          title: "Current chat",
+          messages: conversation,
+        };
+        m77Download(
+          "J.A.R.V.I.S.-chat-" + Date.now() + ".json",
+          JSON.stringify(chat, null, 2),
+        );
+      }
+      function m77ExportAll() {
+        const backup = {
+          format: "J.A.R.V.I.S._MARK_77_BACKUP",
+          version: 1,
+          created: new Date().toISOString(),
+          chats,
+          memory: readStore("j_memory", ""),
+          memoryNotes: m77Get("memoryNotes", []),
+          library: m77Get("library", []),
+          tasks: m77Get("tasks", []),
+          macros: m77Get("macros", []),
+          persona: m77Get("persona", { type: "default" }),
+          settings: {
+            model: settings.model,
+            maxTokens: settings.maxTokens,
+            temperature: settings.temperature,
+          },
+        };
+        m77Download(
+          "J.A.R.V.I.S.-mark77-backup.json",
+          JSON.stringify(backup, null, 2),
+        );
+        document.getElementById("m77BackupOutput").textContent =
+          "Backup downloaded. API key is intentionally excluded.";
+      }
+      function m77ImportBackup(event) {
+        const f = event.target.files[0];
+        if (!f) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const b = JSON.parse(reader.result);
+            if (b.format !== "J.A.R.V.I.S._MARK_77_BACKUP")
+              throw Error("This is not a J.A.R.V.I.S. backup.");
+            if (
+              !confirm(
+                "Restore this backup? Current chats and saved data will be replaced.",
+              )
+            )
+              return;
+            chats = Array.isArray(b.chats) ? b.chats : [];
+            store("j_chats", chats);
+            store("j_memory", b.memory || "");
+            ["memoryNotes", "library", "tasks", "macros", "persona"].forEach(
+              (k) =>
+                m77Set(k, b[k] ?? (k === "persona" ? { type: "default" } : [])),
+            );
+            renderHistory();
+            m77RenderTasks();
+            document.getElementById("m77BackupOutput").textContent =
+              "Backup restored. Reload the page if any panel does not refresh.";
+            toast("Backup restored.");
+          } catch (e) {
+            toast("Restore failed: " + e.message);
+          } finally {
+            event.target.value = "";
+          }
+        };
+        reader.readAsText(f);
+      }
+      function m77ChoosePersona(value) {
+        if (value !== "custom") m77Set("persona", { type: value });
+        else
+          m77Set("persona", {
+            type: "custom",
+            text: document.getElementById("m77PersonaText").value,
+          });
+        document.getElementById("m77PersonaStatus").textContent =
+          "Selected personality: " + value;
+      }
+      function m77LoadPersona() {
+        const p = m77Get("persona", { type: "default" });
+        document.getElementById("m77PersonaSelect").value = p.type || "default";
+        document.getElementById("m77PersonaText").value = p.text || "";
+        document.getElementById("m77PersonaName").value = p.name || "";
+      }
+      function m77SavePersona() {
+        const type = document.getElementById("m77PersonaSelect").value;
+        const text = document.getElementById("m77PersonaText").value.trim();
+        const name = document.getElementById("m77PersonaName").value.trim();
+        if (type === "custom" && !text)
+          return toast("Write your custom personality instructions.");
+        m77Set("persona", { type, text, name });
+        document.getElementById("m77PersonaStatus").textContent =
+          "Saved personality: " +
+          (name || type) +
+          ". It will apply to new AI requests.";
+        toast("Personality saved.");
+      }
+
+      /* MARK 88 — SINGLE-FILE BROWSER INTELLIGENCE LAYER */
+      let j88CameraStream = null;
+      let j88AgentController = null;
+      let j88AgentText = "";
+      let j88TaskTicker = null;
+      const j88Store = (k, v) => store("j88_" + k, v);
+      const j88Read = (k, d) => readStore("j88_" + k, d);
+      function openCommandDeck() {
+        document.getElementById("j88Deck").classList.add("show");
+        j88RenderTasks();
+        j88RefreshDiagnostics();
+        closeSidebar();
+      }
+      function closeCommandDeck() {
+        document.getElementById("j88Deck").classList.remove("show");
+        j88StopCamera();
+      }
+      function j88SetBrainMode() {
+        const mode = document.getElementById("j88BrainMode").value;
+        if (mode !== "auto") document.getElementById("modeSelect").value = mode;
+        document.getElementById("j88BrainOutput").textContent =
+          "Brain mode set to: " +
+          mode +
+          ". Auto routing is active when Auto is selected.";
+        toast("Brain mode updated");
+      }
+      function j88RoutePrompt(text) {
+        const t = text.toLowerCase();
+        let mode = "general",
+          reason = "General request";
+        if (
+          /\b(research|latest|current|sources|compare studies|news|today)\b/.test(
+            t,
+          )
+        ) {
+          mode = "research";
+          reason = "Research intent detected";
+        } else if (
+          /\b(code|program|debug|javascript|python|html|css|function|error)\b/.test(
+            t,
+          )
+        ) {
+          mode = "coding";
+          reason = "Coding intent detected";
+        } else if (
+          /\b(explain|teach|homework|solve|learn|study|chapter|equation)\b/.test(
+            t,
+          )
+        ) {
+          mode = "study";
+          reason = "Learning intent detected";
+        } else if (t.length < 90) {
+          mode = "quick";
+          reason = "Short query detected";
+        }
+        const chosen = document.getElementById("j88BrainMode")?.value || "auto";
+        if (chosen !== "auto") mode = chosen;
+        document.getElementById("modeSelect").value = mode;
+        const out = document.getElementById("j88BrainOutput");
+        if (out)
+          out.textContent = reason + " → " + mode.toUpperCase() + " mode";
+        return mode;
+      }
+      async function j88OnlineResearch(history) {
+        if (!settings.key)
+          throw new Error("Add your OpenRouter key in Settings.");
+        const msgs = buildMessages(history, 9000);
+        const model = settings.model.includes(":online")
+          ? settings.model
+          : settings.model + ":online";
+        const r = await fetchWithRateRetry(
+          API + "/chat/completions",
+          {
+            method: "POST",
+            headers: headers(),
+            cache: "no-store",
+            body: JSON.stringify({
+              model,
+              messages: msgs,
+              temperature: settings.temperature,
+              max_tokens: settings.maxTokens,
+            }),
+          },
+          "Research request",
+        );
+        const d = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(apiError(r.status, d));
+        return (
+          d.choices?.[0]?.message?.content || "No research response returned."
+        );
+      }
+      async function j88StartCamera() {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          toast(
+            "Camera access requires HTTPS or localhost in a supported browser.",
+          );
+          return;
+        }
+        try {
+          j88CameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: "environment" },
+            audio: false,
+          });
+          const v = document.getElementById("j88Video");
+          v.srcObject = j88CameraStream;
+          document.getElementById("j88VisionOutput").textContent =
+            "Camera active. Press Analyze frame to send one still image to the AI.";
+        } catch (e) {
+          document.getElementById("j88VisionOutput").textContent =
+            "Camera unavailable: " + e.message;
+        }
+      }
+      function j88StopCamera() {
+        if (j88CameraStream) {
+          j88CameraStream.getTracks().forEach((t) => t.stop());
+          j88CameraStream = null;
+        }
+        const v = document.getElementById("j88Video");
+        if (v) v.srcObject = null;
+      }
+      async function j88AnalyzeFrame() {
+        if (!settings.key) return openSettings();
+        const v = document.getElementById("j88Video");
+        if (!j88CameraStream || !v.videoWidth) {
+          toast("Start the camera first.");
+          return;
+        }
+        const c = document.getElementById("j88Canvas");
+        c.width = Math.min(v.videoWidth, 1280);
+        c.height = Math.round((c.width * v.videoHeight) / v.videoWidth);
+        c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+        const data = c.toDataURL("image/jpeg", 0.78);
+        const out = document.getElementById("j88VisionOutput");
+        out.textContent = "Analyzing the selected frame...";
+        try {
+          const model = /gemini|gpt-4o|claude-3|llava|qwen.*vl/i.test(
+            settings.model,
+          )
+            ? settings.model
+            : "google/gemini-2.5-flash";
+          const r = await fetchWithRateRetry(API + "/chat/completions", {
+            method: "POST",
+            headers: headers(),
+            cache: "no-store",
+            body: JSON.stringify({
+              model,
+              messages: [
+                {
+                  role: "user",
+                  content: [
+                    {
+                      type: "text",
+                      text: "Describe what is visible in this image. Be factual, distinguish observations from guesses, and do not identify people.",
+                    },
+                    { type: "image_url", image_url: { url: data } },
+                  ],
+                },
+              ],
+              max_tokens: 900,
+              temperature: 0.3,
+            }),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(apiError(r.status, d));
+          out.textContent =
+            d.choices?.[0]?.message?.content || "No vision result.";
+        } catch (e) {
+          out.textContent =
+            "Vision request failed: " +
+            e.message +
+            ". Check that the selected model supports image input and that your OpenRouter account permits it.";
+        }
+      }
+      function j88Tasks() {
+        return j88Read("tasks", []);
+      }
+      function j88RenderTasks() {
+        const el = document.getElementById("j88TaskList");
+        if (!el) return;
+        const tasks = j88Tasks();
+        el.innerHTML = "";
+        if (!tasks.length) {
+          el.textContent = "No tasks yet.";
+          return;
+        }
+        tasks.forEach((t) => {
+          const row = document.createElement("div");
+          row.className = "j88-task" + (t.done ? " done" : "");
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = !!t.done;
+          cb.onchange = () => {
+            t.done = cb.checked;
+            j88Store("tasks", tasks);
+            j88RenderTasks();
+          };
+          const label = document.createElement("span");
+          label.textContent =
+            t.text + (t.due ? " — " + new Date(t.due).toLocaleString() : "");
+          const del = document.createElement("button");
+          del.className = "j88-btn alt";
+          del.textContent = "×";
+          del.onclick = () => {
+            j88Store(
+              "tasks",
+              tasks.filter((x) => x.id !== t.id),
+            );
+            j88RenderTasks();
+          };
+          row.append(cb, label, del);
+          el.append(row);
+        });
+      }
+      function j88AddTask() {
+        const input = document.getElementById("j88TaskText"),
+          date = document.getElementById("j88TaskDate"),
+          text = input.value.trim();
+        if (!text) return toast("Enter a task first.");
+        const tasks = j88Tasks();
+        tasks.unshift({
+          id: Date.now() + Math.random(),
+          text,
+          due: date.value || "",
+          done: false,
+          notified: false,
+        });
+        j88Store("tasks", tasks);
+        input.value = "";
+        date.value = "";
+        j88RenderTasks();
+        toast("Task saved in this browser.");
+      }
+      async function j88RequestNotifications() {
+        if (!("Notification" in window))
+          return toast("Notifications are not supported.");
+        const p = await Notification.requestPermission();
+        toast("Notification permission: " + p);
+      }
+      function j88CheckDueTasks() {
+        const tasks = j88Tasks(),
+          now = Date.now();
+        let changed = false;
+        tasks.forEach((t) => {
+          if (
+            !t.done &&
+            t.due &&
+            !t.notified &&
+            new Date(t.due).getTime() <= now
+          ) {
+            if (
+              "Notification" in window &&
+              Notification.permission === "granted"
+            )
+              new Notification("J.A.R.V.I.S. reminder", { body: t.text });
+            t.notified = true;
+            changed = true;
+          }
+        });
+        if (changed) j88Store("tasks", tasks);
+      }
+      function j88ClearTasks() {
+        const tasks = j88Tasks().filter((t) => !t.done);
+        j88Store("tasks", tasks);
+        j88RenderTasks();
+      }
+      function j88ClearLocalAddons() {
+        if (
+          !confirm(
+            "Clear J.A.R.V.I.S. add-on tasks and diagnostics preferences from this browser?",
+          )
+        )
+          return;
+        localStorage.removeItem("j88_tasks");
+        j88RenderTasks();
+        toast("Add-on task data cleared.");
+      }
+      function j88RefreshDiagnostics() {
+        const el = document.getElementById("j88Diagnostics");
+        if (!el) return;
+        const nav = navigator,
+          mem = nav.deviceMemory
+            ? nav.deviceMemory + " GB (browser estimate)"
+            : "Not exposed",
+          cores = nav.hardwareConcurrency || "Not exposed",
+          conn = nav.connection || nav.mozConnection || nav.webkitConnection;
+        const rows = [
+          ["Browser", nav.userAgent],
+          ["Platform", nav.platform || "Not exposed"],
+          ["Logical CPU cores", cores],
+          ["Device memory", mem],
+          [
+            "Network",
+            conn
+              ? conn.effectiveType + " / " + (conn.downlink || "?") + " Mbps"
+              : "Not exposed",
+          ],
+          ["Online status", nav.onLine ? "Online" : "Offline"],
+          ["Screen", screen.width + " × " + screen.height],
+          ["App uptime", Math.round(performance.now() / 1000) + " sec"],
+          [
+            "Storage",
+            navigator.storage?.estimate ? "Available" : "Not exposed",
+          ],
+        ];
+        el.innerHTML = "";
+        rows.forEach(([k, v]) => {
+          const d = document.createElement("div");
+          d.className = "j88-stat";
+          const a = document.createElement("span"),
+            b = document.createElement("b");
+          a.textContent = k;
+          b.textContent = String(v).slice(0, 180);
+          d.append(a, b);
+          el.append(d);
+        });
+      }
+      function j88ExportDiagnostics() {
+        const text =
+          "J.A.R.V.I.S. BROWSER DIAGNOSTICS\n" +
+          document.getElementById("j88Diagnostics").innerText +
+          "\nGenerated: " +
+          new Date().toISOString();
+        j88DownloadFile("J.A.R.V.I.S.-diagnostics.txt", text, "text/plain");
+      }
+      function j88DownloadFile(name, text, type) {
+        const a = document.createElement("a"),
+          url = URL.createObjectURL(new Blob([text], { type }));
+        a.href = url;
+        a.download = name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      async function j88RunAgent() {
+        const goal = document.getElementById("j88AgentGoal").value.trim();
+        if (!goal) return toast("Describe the goal first.");
+        if (!settings.key) return openSettings();
+        const out = document.getElementById("j88AgentOutput");
+        j88AgentController = new AbortController();
+        out.textContent = "Planning workflow...";
+        try {
+          const plan = await m77Call(
+            settings.model,
+            [
+              {
+                role: "system",
+                content:
+                  "You are J.A.R.V.I.S. Agent. Break the goal into 3-5 practical steps and return a compact numbered plan. Never claim to have executed external actions.",
+              },
+              { role: "user", content: goal },
+            ],
+            { signal: j88AgentController.signal, max_tokens: 500 },
+          );
+          out.textContent = "GOAL\n" + goal + "\n\nPLAN\n" + plan;
+          const result = await m77Call(
+            settings.model,
+            [
+              {
+                role: "system",
+                content:
+                  "Produce the final useful deliverable for the user's goal. Use clear sections, include assumptions and verification checklist. Do not claim external actions or tests occurred.",
+              },
+              {
+                role: "user",
+                content:
+                  "Goal: " +
+                  goal +
+                  "\nPlan:\n" +
+                  plan +
+                  "\nPrepare the deliverable now.",
+              },
+            ],
+            { signal: j88AgentController.signal, max_tokens: 2200 },
+          );
+          j88AgentText =
+            "J.A.R.V.I.S. AGENT OUTPUT\nGoal: " +
+            goal +
+            "\n\nPlan:\n" +
+            plan +
+            "\n\nDELIVERABLE\n" +
+            result;
+          out.textContent = j88AgentText;
+        } catch (e) {
+          out.textContent += "\n\nAgent stopped or failed: " + e.message;
+        } finally {
+          j88AgentController = null;
+        }
+      }
+      function j88StopAgent() {
+        j88AgentController?.abort();
+      }
+      function j88DownloadAgent() {
+        if (!j88AgentText) return toast("Run the agent first.");
+        j88DownloadFile(
+          "J.A.R.V.I.S.-agent-output.txt",
+          j88AgentText,
+          "text/plain",
+        );
+      }
+
+      /* ChatBot: LIVE MODEL CATALOGUE + HONEST SPEED TELEMETRY */
+      let j100LastModel = settings.model;
+      let j100FirstTokenMs = null;
+      let j100RequestStarted = 0;
+      let j100FirstTokenRecorded = false;
+
+      function j100IsFreeListed(m) {
+        return /:free$/i.test(m.id || "");
+      }
+      function j100HasZeroPrice(m) {
+        const p = m.pricing || {};
+        const a = Number(p.prompt),
+          b = Number(p.completion);
+        return Number.isFinite(a) && Number.isFinite(b) && a === 0 && b === 0;
+      }
+      function j100HasImageInput(m) {
+        const modalities =
+          m.architecture?.input_modalities || m.architecture?.modality || [];
+        return Array.isArray(modalities)
+          ? modalities.some((x) => /image|vision/i.test(String(x)))
+          : /image|vision/i.test(String(modalities));
+      }
+      function j100Context(m) {
+        return Number(m.context_length || 0);
+      }
+      function j100PriceLabel(m) {
+        if (j100IsFreeListed(m)) return "Free endpoint label";
+        if (j100HasZeroPrice(m)) return "$0 listed pricing";
+        const p = m.pricing || {};
+        if (p.prompt != null || p.completion != null)
+          return "Paid/variable pricing";
+        return "Pricing not listed";
+      }
+      function j100RenderModels() {
+        const list = document.getElementById("j100ModelList");
+        if (!list) return;
+        const q = (document.getElementById("j100ModelSearch")?.value || "")
+          .trim()
+          .toLowerCase();
+        const filter =
+          document.getElementById("j100ModelFilter")?.value || "all";
+        let rows = models.filter((m) => {
+          const text = (
+            m.id +
+            " " +
+            (m.name || "") +
+            " " +
+            (m.description || "")
+          ).toLowerCase();
+          if (q && !text.includes(q)) return false;
+          if (filter === "free" && !j100IsFreeListed(m)) return false;
+          if (
+            filter === "freezero" &&
+            !(j100IsFreeListed(m) || j100HasZeroPrice(m))
+          )
+            return false;
+          if (filter === "vision" && !j100HasImageInput(m)) return false;
+          if (filter === "long" && j100Context(m) < 100000) return false;
+          return true;
+        });
+        const total = rows.length;
+        const meta = document.getElementById("j100ModelMeta");
+        if (meta)
+          meta.innerHTML =
+            `<span class="j100-pill">${models.length.toLocaleString()} models in live catalogue</span>` +
+            `<span class="j100-pill">${total.toLocaleString()} matching filter</span>` +
+            `<span class="j100-pill">Showing up to 100 for speed</span>`;
+        list.innerHTML = "";
+        if (!total) {
+          list.textContent =
+            "No models match this filter. Try another search or refresh the catalogue.";
+          return;
+        }
+        // Render a bounded page to keep the interface responsive with very large catalogues.
+        rows.slice(0, 100).forEach((m) => {
+          const item = document.createElement("div");
+          item.className = "j100-model-item";
+          const info = document.createElement("div");
+          const name = document.createElement("strong");
+          name.textContent = m.name || m.id;
+          const small = document.createElement("small");
+          const context = j100Context(m);
+          small.textContent = `${m.id} • ${j100PriceLabel(m)}${context ? " • " + context.toLocaleString() + " context" : ""}${j100HasImageInput(m) ? " • image input" : ""}`;
+          info.append(name, small);
+          const choose = document.createElement("button");
+          choose.textContent =
+            m.id === settings.model ? "Selected" : "Use model";
+          choose.disabled = m.id === settings.model;
+          choose.onclick = () => {
+            changeModel(m.id);
+            j100RenderModels();
+          };
+          item.append(info, choose);
+          list.append(item);
+        });
+        if (total > 100) {
+          const more = document.createElement("div");
+          more.className = "j88-output";
+          more.textContent = `Showing first 100 of ${total}. Refine your search to find a specific model.`;
+          list.append(more);
+        }
+      }
+      function j100UseAutoFree() {
+        j100LastModel =
+          settings.model === "openrouter/free" ? j100LastModel : settings.model;
+        changeModel("openrouter/free");
+        const note = document.getElementById("j100RouterStatus");
+        if (note)
+          note.textContent =
+            "Auto Free Model active. OpenRouter will route the request to an eligible free model when available; availability and limits vary.";
+        toast("Auto Free Model selected");
+      }
+      function j100RestoreModel() {
+        const target =
+          j100LastModel && j100LastModel !== "openrouter/free"
+            ? j100LastModel
+            : FALLBACK_MODELS[0];
+        changeModel(target);
+        const note = document.getElementById("j100RouterStatus");
+        if (note) note.textContent = "Restored: " + target;
+      }
+      function j100UpdateTelemetry(totalMs) {
+        const first = document.getElementById("j100FirstToken");
+        const total = document.getElementById("j100TotalTime");
+        const count = document.getElementById("j100ModelCount");
+        if (first)
+          first.textContent =
+            j100FirstTokenMs == null
+              ? "—"
+              : (j100FirstTokenMs / 1000).toFixed(2) + "s";
+        if (total && totalMs != null)
+          total.textContent = (totalMs / 1000).toFixed(2) + "s";
+        if (count) count.textContent = models.length.toLocaleString();
+        const note = document.getElementById("j100SpeedNote");
+        if (note && totalMs != null)
+          note.textContent = `Last request: ${Math.round(totalMs)} ms total. First token: ${j100FirstTokenMs == null ? "not received" : Math.round(j100FirstTokenMs) + " ms"}. Model: ${settings.model}.`;
+      }
+
+      /* STARTUP */
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          localStorage.removeItem("j_key");
+        } catch {}
+        document.getElementById("apiKey").value = "";
+        document.getElementById("modelSelect").value = settings.model;
+        document.getElementById("settingsModel").value = settings.model;
+        document.getElementById("maxTokens").value = String(settings.maxTokens);
+
+        renderHistory();
+        loadVoices();
+        document.getElementById("codeEditor").value =
+          localStorage.getItem("j_code") ||
+          "<!doctype html>\n<html>\n<head><title>My Project</title></head>\n<body>\n  <h1>Hello from J.A.R.V.I.S. Coding Studio</h1>\n  <p>Start editing this page.</p>\n</body>\n</html>";
+
+        if (!currentChat) newChat();
+
+        models = FALLBACK_MODELS.map((id) => ({ id }));
+        fillModelSelects();
+        j100RenderModels();
+        j100UpdateTelemetry(null);
+        m77Init();
+        j88RefreshDiagnostics();
+        j88RenderTasks();
+        if (j88TaskTicker) clearInterval(j88TaskTicker);
+        j88TaskTicker = setInterval(j88CheckDueTasks, 30000);
+
+        if (!settings.key) {
+          setStatus("API key required");
+        }
+        // The public model catalogue can be loaded without an API key.
+        // Chat completion still requires the user's own OpenRouter key.
+        loadModels();
+      });
+
+      window.addEventListener("beforeunload", () => {
+        if (aborter) aborter.abort();
+
+        wakeListening = false;
+        if (recognition) {
+          try {
+            recognition.stop();
+          } catch {}
+        }
+        stopVoice();
+        j88StopCamera();
+        if (j88TaskTicker) clearInterval(j88TaskTicker);
+      });
+    </script>
+  </body>
+</html>
